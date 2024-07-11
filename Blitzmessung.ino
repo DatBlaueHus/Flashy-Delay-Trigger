@@ -17,13 +17,11 @@ int sensRef = 0;
 char charBuf[50];
 
 int led = 13; // LED output
-int xInput = 12; // x-Sync input switch
+int xInput = 10; // x-Sync input switch
 
   
 unsigned long xOn = 0;
 
-volatile byte xInputState = HIGH;
-volatile byte xInputPreviousState = HIGH;
 
 void setup() {
 
@@ -61,7 +59,8 @@ void setup() {
 
   pinMode(led, OUTPUT);
   pinMode(xInput, INPUT_PULLUP);
-//  attachInterrupt(digitalPinToInterrupt(xInput), handleXInput, CHANGE); //we need to attach an interrupt
+  attachInterrupt(digitalPinToInterrupt(xInput), handleXLow, FALLING); //we need to attach an interrupt
+  attachInterrupt(digitalPinToInterrupt(xInput), handleXHigh, RISING); //we need to attach an interrupt
 
 
   }
@@ -72,18 +71,22 @@ void setup() {
 
 void loop() {
   
+//  Serial.println(xInputState);
+  
   xInputState = digitalRead(xInput);
   if (xInputState != xInputPreviousState) {
-    if (xInputState) {
+    if (xInputState == LOW) {
       xOn = micros();
     }
     else {
           unsigned long now = micros();         // now: timestamp
           unsigned long elapsed = now - xOn;  // elapsed: duration
+          float millis = elapsed * 0.001;
           Serial.print("x-sync-Interval: ");
-          Serial.print(elapsed);
-          Serial.println(" micros");
+          Serial.print(millis,2);
+          Serial.println(" ms");
     }
+    xInputPreviousState = xInputState;
   }
 
   sens = analogRead(0);
@@ -105,9 +108,15 @@ void loop() {
   }
 }
 
-void handleXInput() {
-    xInputState = !xInputState;
-    if (xInputState = LOW) {
+void handleXHigh() {
+    //Serial.println("handleXInput");
+    xInputState = HIGH;
+}
+
+void handleXLow() {
+    //Serial.println("handleXInput");
+    xInputState = LOW;
+ /*   if (xInputState = LOW) {
       xOn = micros();
       Serial.println("x on");
     }
@@ -118,4 +127,5 @@ void handleXInput() {
           Serial.print(elapsed);
           Serial.println(" micros");
     }
+    */
 }
