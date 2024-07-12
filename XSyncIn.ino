@@ -1,55 +1,29 @@
+int xInput = 2; // Port for x-Sync switch, check if port actually supports Interrupts, i.e. Arduino nano only supports port 2 & 3!
+bool handleInterrupt = false;
 
-int xInput = 10; // x-Sync input switch
-unsigned long xOn = 0;
-
-volatile byte xInputState = HIGH;
-volatile byte xInputPreviousState = HIGH;
-
-
-void setupXSyncIn() {
+void setupXSyncIn(int inputPort) {
+  xInput = inputPort;
   pinMode(xInput, INPUT_PULLUP);
-//  attachInterrupt(digitalPinToInterrupt(xInput), handleXLow, FALLING); //we need to attach an interrupt
-//  attachInterrupt(digitalPinToInterrupt(xInput), handleXHigh, RISING); //we need to attach an interrupt
+  attachInterrupt(digitalPinToInterrupt(xInput), handleChange, CHANGE); //we need to attach an interrupt
+  delay(1);
+  handleInterrupt = true;
 }
 
-void reportXSyncState() {
-  xInputState = digitalRead(xInput);
-  if (xInputState != xInputPreviousState) {
-    if (xInputState == LOW) {
-      xOn = micros();
-    }
-    else {
-          unsigned long now = micros();         // now: timestamp
-          unsigned long elapsed = now - xOn;  // elapsed: duration
-          float millis = elapsed * 0.001;
-          Serial.print("x-sync-Interval: ");
-          Serial.print(millis,2);
-          Serial.println(" ms");
-    }
-    xInputPreviousState = xInputState;
+void handleChange() {
+  if (!handleInterrupt) {
+    return;
   }
-}
 
-// doesn't work
-
-void handleXHigh() {
-    //Serial.println("handleXInput");
-    xInputState = HIGH;
-}
-
-void handleXLow() {
-    //Serial.println("handleXInput");
-    xInputState = LOW;
- /*   if (xInputState = LOW) {
-      xOn = micros();
-      Serial.println("x on");
+  xInputState = digitalRead(xInput);
+  xSyncTriggered = !xInputState; // trigger goes to LOW
+  if (xSyncTriggered) {
+     xOn = micros();
+  }
+  else {
+    xOff = micros();
+    if (reportXSyncTime) {
+      unsigned long elapsed = xOff - xOn;
+      printMicrosAsMillis(elapsed, "x-sync-Interval: ");
     }
-    else {
-          unsigned long now = micros();         // now: timestamp
-          unsigned long elapsed = now - xOn;  // elapsed: duration
-          Serial.print("x-sync-Interval: ");
-          Serial.print(elapsed);
-          Serial.println(" micros");
-    }
-    */
+  }
 }

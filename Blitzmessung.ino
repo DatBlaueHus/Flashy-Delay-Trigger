@@ -1,3 +1,7 @@
+#include "Utilities.hpp"
+#include "XSyncIn.hpp"
+
+
 //Fast settings for analog read!
 #define FASTADC 1
 
@@ -16,7 +20,8 @@ int sensMax = 0;
 int sensRef = 0;
 char charBuf[50];
 
-int led = 13; // LED output
+int ledPort = 13; // LED output
+int xSyncPort = 2; // port for x-Sync switch
 
 void setup() {
 
@@ -48,15 +53,15 @@ void setup() {
   #endif
     Serial.print("SensRef: ");
     Serial.println(sensRef);
-    digitalWrite(led, HIGH);
+
+    //LED feedback
+    pinMode(ledPort, OUTPUT);
+    digitalWrite(ledPort, HIGH);
     delay(100);
-    digitalWrite(led, LOW);
-
-  pinMode(led, OUTPUT);
-
-  setupXSyncIn();
-
-
+    digitalWrite(ledPort, LOW);
+  
+    //X-Sync Setup
+    setupXSyncIn(xSyncPort);
 
   }
   else {
@@ -65,12 +70,12 @@ void setup() {
 }
 
 void loop() {
-  
-  reportXSyncState();
 
-//  Serial.println(xInputState);
+  if (xSyncTriggered) {
+    xSyncTriggered = false;
+    Serial.println("Handle x-sync trigger!");
+  }
   
-
   sens = analogRead(0);
   if (sens > sensRef) {
     
@@ -83,9 +88,7 @@ void loop() {
 
     unsigned long now = micros();         // now: timestamp
     unsigned long elapsed = now - start;  // elapsed: duration
-    Serial.print("Interval: ");
-    Serial.print(elapsed);
-    Serial.println(" micros");
+    printMicrosAsMillis(elapsed, "Interval: ");
     delay(300);
   }
 }
