@@ -25,10 +25,10 @@ void setupFlashAnalytics(int analogPort) {
   inputPort = analogPort;
   
   #if FASTADC
-  // set prescale to 16
-  sbi(ADCSRA,ADPS2);
-  cbi(ADCSRA,ADPS1);
-  cbi(ADCSRA,ADPS0);
+    // set prescale to 16
+    sbi(ADCSRA,ADPS2);
+    cbi(ADCSRA,ADPS1);
+    cbi(ADCSRA,ADPS0);
   #endif
 
     for(x =0; x < 500; x++) {
@@ -39,6 +39,12 @@ void setupFlashAnalytics(int analogPort) {
     }
   
   sensRef = sensMax + 10;
+
+  #if FASTADC
+    Serial.println("FAST ADC");
+  #endif
+  Serial.print("SensRef: ");
+  Serial.println(sensRef);
 }
 
 //handle the flash state, returns true if the flash was started

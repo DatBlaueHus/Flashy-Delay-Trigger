@@ -5,30 +5,38 @@
 
 #include "FlashAnalytics.hpp"
 
+#include "XDelay.hpp"
 
-int ledPort = 13; // LED output
+// Port configuration
+
+//analog in
 int flashPort = 0; // analog port zero for flash analytics
 
-int xSyncPort = 2; // port for x-Sync switch inputr from camera
-int xOutPort = 4; // port for x-Output
 
-bool flashStarted = false;
+//digital in
+int xSyncPort = 2; // port for x-Sync switch input from camera, must support interrupt
+
+int rotaryEncoder1 = 7; // port for direction 1
+int rotaryEncoder2 = 8; // port for direction 2
+int rotaryEncoderSwitch = 9; // the port to set up for the rotary encoder push button
+
+//digital out
+int xOutPort = 4; // port for x-Output
 
 void setup() {
 
+  if (Serial.availableForWrite()) {
+    Serial.begin(115200);
+    while (! Serial);
+  }
+
+  Serial.println("FlashyDelayTrigger V 0.1");
+
+  setupRotaryDelay(rotaryEncoder1, rotaryEncoder2, rotaryEncoderSwitch);
   setupFlashAnalytics(flashPort);
   setupXSyncIn(xSyncPort);
   setupXSyncOut(xOutPort);
 
-  if (Serial.availableForWrite()) {
-    Serial.begin(9600);
-    Serial.println("Configuration");
- #if FASTADC
-   Serial.println("FAST ADC");
-  #endif
-    Serial.print("SensRef: ");
-    Serial.println(sensRef);
-  }
 }
 
 void loop() {
@@ -40,5 +48,6 @@ void loop() {
   }
   handleXTriggerState();
   handleFlashAnalyticsState();
+  handleRotaryDelay();
 }
 
