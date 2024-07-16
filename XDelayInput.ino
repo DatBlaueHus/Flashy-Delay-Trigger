@@ -2,6 +2,7 @@
 #include <EEPROM.h>
 
 #include "XDelay.hpp"
+#include "FlashyDisplay.hpp"
 
 RotaryEncoder *encoder;
 
@@ -55,10 +56,10 @@ void updateEncoder() {
     // Wrap around if the position goes out of bounds
     if (newPos < 0) {
       newPos = exposureCount - 1;
-      encoder.setPosition(newPos);
+      encoder->setPosition(newPos);
     } else if (newPos >= exposureCount) {
       newPos = 0;
-      encoder.setPosition(newPos);
+      encoder->setPosition(newPos);
     }
   
      // Use modulo math to wrap around the position
@@ -76,7 +77,18 @@ void handleRotaryDelay() {
   updateEncoder();
   if (valueChanged) {
     // Print the new exposure time
-    Serial.println("Selected exposure time: f/" + String(1.0/exposureTimes[currentIndex]));
-  valueChanged = false; // Reset the flag
+    displayText(formatExposureTime(currentIndex));
+    Serial.println( "Selected exposure time: " + formatExposureTime(currentIndex) );
+    valueChanged = false; // Reset the flag
+  }
+}
+
+String formatExposureTime(int index) {
+  float time = exposureTimes[index];
+  if (time >= 1.0) {
+    return String(time, 0) + "\"";
+  } else {
+    int denominator = round(1.0 / time);
+    return "1/" + String(denominator);
   }
 }

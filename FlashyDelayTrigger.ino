@@ -7,6 +7,8 @@
 
 #include "XDelay.hpp"
 
+#include "FlashyDisplay.hpp"
+
 // Port configuration
 
 //analog in
@@ -29,6 +31,8 @@ void setup() {
     Serial.begin(115200);
     while (! Serial);
   }
+
+  setupDisplay();
 
   Serial.println("FlashyDelayTrigger V 0.1");
 
