@@ -12,18 +12,17 @@
 // Port configuration
 
 //analog in
-int flashPort = 0; // analog port zero for flash analytics
-
+const int flashPort = 0; // analog port zero for flash analytics
 
 //digital in
-int xSyncPort = 2; // port for x-Sync switch input from camera, must support interrupt
+const int xSyncPort = 2; // port for x-Sync switch input from camera, must support interrupt
 
-int rotaryEncoder1 = 7; // port for direction 1
-int rotaryEncoder2 = 8; // port for direction 2
-int rotaryEncoderSwitch = 9; // the port to set up for the rotary encoder push button
+const int rotaryEncoder1 = 7; // port for direction 1
+const int rotaryEncoder2 = 8; // port for direction 2
+const int rotaryEncoderSwitch = 9; // the port to set up for the rotary encoder push button
 
 //digital out
-int xOutPort = 4; // port for x-Output
+const int xOutPort = 4; // port for x-Output
 
 void setup() {
 
@@ -31,11 +30,7 @@ void setup() {
     Serial.begin(115200);
     while (! Serial);
   }
-
   setupDisplay();
-
-  Serial.println("FlashyDelayTrigger V 0.1");
-
   setupRotaryDelay(rotaryEncoder1, rotaryEncoder2, rotaryEncoderSwitch);
   setupFlashAnalytics(flashPort);
   setupXSyncIn(xSyncPort);

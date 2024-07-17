@@ -9,7 +9,6 @@ RotaryEncoder *encoder;
 
 // Define the fixed list of exposure times (in seconds) and their microsecond equivalents
 const float exposureTimes[] = {1.0/320, 1.0/250, 1.0/200, 1.0/160, 1.0/125, 1.0/100, 1.0/80, 1.0/60, 1.0/50, 1.0/40, 1.0/30, 1.0/25, 1.0/20, 1.0/15, 1.0/13, 1.0/10, 1.0/8, 1.0/6, 1.0/5, 1.0/4, 1.0/3, 1.0/2.5, 1.0/2, 1.0/1.6, 1.0/1.3, 1.0, 2.0, 4.0, 8.0};
-long calculateExposureMicroseconds(int index);
 const int exposureCount = sizeof(exposureTimes) / sizeof(exposureTimes[0]);
 
 int exposureIndex = 0;  // To keep track of the current exposure time
@@ -29,6 +28,80 @@ int switchPort;
 //persitsing & debouncing
 const int EEPROMAddress = 0; // EEPROM address to store the current exposure time index
 
+//Converters ==================================================================================================
+
+long calculateExposureMicroseconds(int index) {
+  return static_cast<long>(exposureTimes[index] * 1000000);
+}
+
+//calculates the milliseconds from the current exposure value
+long millisFromExposure() {
+  return calculateExposureMicroseconds(exposureIndex)/1000;
+}
+
+int exposureFromMillis() {
+  return findNearestExposureIndex(millisValue);
+}
+
+int findNearestExposureIndex(long milliseconds) {
+  long microseconds = milliseconds * 1000;
+  int nearestIndex = 0;
+  long smallestDifference = abs(calculateExposureMicroseconds(0) - microseconds);
+  for (int i = 1; i < exposureCount; i++) {
+    long difference = abs(calculateExposureMicroseconds(i) - microseconds);
+    if (difference < smallestDifference) {
+      smallestDifference = difference;
+      nearestIndex = i;
+    }
+    else { 
+      return nearestIndex; // as soon as the difference is bigger, we can bail out!
+    }
+    
+  }
+  return nearestIndex;
+}
+
+//DisplayHelpers ==================================================================================================
+
+void printMillis() {
+  displayText("Milliseconds: " + String(millisValue));
+}
+
+void printExposure() {
+  String changed = millisValue != calculateExposureMicroseconds(exposureIndex)/1000 ? "\xF7":"";
+  displayText("Exp: "+changed+formatExposureTime(exposureIndex));
+}
+
+void printCorrection() {
+  displayText("Correction "+formatCorrectionValue(correctionValue));
+}
+
+// Formatters ==================================================================================================
+
+String formatExposureTime(int index) {
+  float time = exposureTimes[index];
+  if (time >= 1.0) {
+    return String(time, 0) + "\"";
+  } else {
+    float denominator = 1.0 / time;
+    int roundedDenominator = (int)(denominator + 0.5); // Properly round the denominator
+
+    // Check if the rounded denominator is close enough to the actual denominator
+    if (abs(denominator - roundedDenominator) > 0.01) {
+      return "1/" + String(denominator, 1);
+    } else {
+      return "1/" + String(roundedDenominator);
+    }
+  }
+}
+
+//Displays microseconds as ms with one digit after the point
+String formatCorrectionValue(int value) {
+  return String(value / 1000.0, 1) + " ms";
+}
+
+
+
 void setupRotaryDelay(int rotaryPort1, int rotaryPort2, int rotarySwitchPort) {
   
   //Persist the switch port
@@ -47,13 +120,10 @@ void setupRotaryDelay(int rotaryPort1, int rotaryPort2, int rotarySwitchPort) {
   if (exposureIndex < 0 || exposureIndex >= exposureCount) {
     exposureIndex = 0;  // Default to the first exposure time if the index is out of range
   }
+  millisValue = millisFromExposure();
 
     // Set the encoder position to the saved position
   encoder->setPosition(exposureIndex);
-  
-  // Print the initial exposure time
-  Serial.println("Initial exposure time: 1/" + String(1.0/exposureTimes[exposureIndex]));
-  Serial.println("Equivalent time in microseconds: " + String(calculateExposureMicroseconds(exposureIndex)));
 }
 
 
@@ -61,42 +131,55 @@ void setupRotaryDelay(int rotaryPort1, int rotaryPort2, int rotarySwitchPort) {
 void handleRotaryDelay() {
   encoder->tick();  // Update the encoder state
   handleSwitchPress();
-
   if (millis() - lastDebounceTime > debounceDelay) {
     int newPos = encoder->getPosition();
     if (currentMode == EXPOSURE) {
-        if (newPos < 0) {
-          newPos = exposureCount - 1;
-          encoder->setPosition(newPos);
-        } else if (newPos >= exposureCount) {
-          newPos = 0;
-          encoder->setPosition(newPos);
-        }
-        if (newPos != exposureIndex && millis() - lastDebounceTime > debounceDelay) {
-          exposureIndex = newPos;
-          millisValue = millisFromExposure();
-          printExposure();
-//        EEPROM.write(EEPROMAddress, currentIndex);
-        }
+      handleExposureInput(newPos);
       } else if (currentMode == CORRECTION) {
-        int newCorrection = newPos * 100;
-        if (correctionValue != newCorrection) {
-          correctionValue = newCorrection;
-          printCorrection();
-        }
+        handleCorrectionInput(newPos);
       } else if (currentMode == MILLIS) {
-        if (newPos < 0) {
-          newPos = 0;
-          encoder->setPosition(newPos);
-        }
-        if (millisValue != newPos) {
-          millisValue = newPos;
-          printMillis();
-        }
+        handleMillisInput(newPos);
       }
     lastDebounceTime = millis();
-  }  
+  }
+  EEPROM.write(EEPROMAddress, exposureIndex);
 }
+
+void handleExposureInput(int newPos) {
+  if (newPos < 0) {
+    newPos = exposureCount - 1;
+    encoder->setPosition(newPos);
+  } else if (newPos >= exposureCount) {
+    newPos = 0;
+    encoder->setPosition(newPos);
+  }
+  if (newPos != exposureIndex) {
+    exposureIndex = newPos;
+    millisValue = millisFromExposure();
+    printExposure();
+  }
+}
+
+void handleMillisInput(int newPos) {
+  if (newPos < 0) {
+    newPos = 0;
+    encoder->setPosition(newPos);
+  }
+  if (millisValue != newPos) {
+    millisValue = newPos;
+    printMillis();
+    exposureIndex = findNearestExposureIndex(millisValue);
+  }
+}
+
+void handleCorrectionInput(int newPos) {
+  int newCorrection = newPos * 100;
+  if (correctionValue != newCorrection) {
+    correctionValue = newCorrection;
+    printCorrection();
+  }
+}
+
 
 
 void handleSwitchPress() {
@@ -121,84 +204,4 @@ void handleSwitchPress() {
       encoder->setPosition(exposureIndex);
     }
   }
-}
-
-//Converters
-
-//calculates the milliseconds from the current exposure value
-unsigned long millisFromExposure() {
-  return calculateExposureMicroseconds(exposureIndex)/1000;
-}
-
-long calculateExposureMicroseconds(int index) {
-  return static_cast<long>(exposureTimes[index] * 1000000);
-}
-
-int exposureFromMillis() {
-  return findNearestExposureIndex(millisValue);
-}
-
-int findNearestExposureIndex(long milliseconds) {
-  long microseconds = milliseconds * 1000;
-  int nearestIndex = 0;
-  long smallestDifference = abs(calculateExposureMicroseconds(0) - microseconds);
-
-  Serial.println("Input milliseconds: " + String(milliseconds));
-  Serial.println("Input microseconds: " + String(microseconds));
-  Serial.println("Starting with index 0, difference: " + String(smallestDifference));
-
-  for (int i = 1; i < exposureCount; i++) {
-    long difference = abs(calculateExposureMicroseconds(i) - microseconds);
-    Serial.println("Index " + String(i) + ", exposure time: " + String(calculateExposureMicroseconds(i)) + ", difference: " + String(difference));
-
-    if (difference < smallestDifference) {
-      smallestDifference = difference;
-      nearestIndex = i;
-      Serial.println("New nearest index: " + String(nearestIndex) + ", smallest difference: " + String(smallestDifference));
-    }
-  }
-
-  return nearestIndex;
-}
-
-
-
-
-//DisplayHelpers
-
-void printMillis() {
-  displayText("Milliseconds: " + String(millisValue));
-}
-
-void printExposure() {
-  String changed = millisValue != calculateExposureMicroseconds(exposureIndex)/1000 ? "~":"";
-  displayText("Exp: "+changed+formatExposureTime(exposureIndex));
-}
-
-void printCorrection() {
-  displayText("Correction "+formatCorrectionValue(correctionValue));
-}
-
-// MOVE to Utilities
-
-String formatExposureTime(int index) {
-  float time = exposureTimes[index];
-  if (time >= 1.0) {
-    return String(time, 0) + "\"";
-  } else {
-    float denominator = 1.0 / time;
-    int roundedDenominator = (int)(denominator + 0.5); // Properly round the denominator
-
-    // Check if the rounded denominator is close enough to the actual denominator
-    if (abs(denominator - roundedDenominator) > 0.01) {
-      return "1/" + String(denominator, 1);
-    } else {
-      return "1/" + String(roundedDenominator);
-    }
-  }
-}
-
-//Displays microseconds as ms with one digit after the point
-String formatCorrectionValue(int value) {
-  return String(value / 1000.0, 1) + " ms";
 }

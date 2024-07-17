@@ -8,6 +8,8 @@
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
 
+
+
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 // The pins for I2C are defined by the Wire-library. 
 // On an arduino UNO:       A4(SDA), A5(SCL)
@@ -70,10 +72,11 @@ void setupDisplay() {
 /*!
 @brief  A simple text output at 0,0
 @param  text: The text to display
+@param box: The number of the text box where to place the text
+@param highlight: If true, highlight the box
 @note   The text will wrap hardly even within word borders
 */
-
-void displayText(String text) {
+void displayText(String text, int box, bool highlight) {
   display.stopscroll();
   display.clearDisplay();
   display.setCursor(0, 0);     // Start at top-left corner
