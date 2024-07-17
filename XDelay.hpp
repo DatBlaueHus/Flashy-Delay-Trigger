@@ -1,7 +1,7 @@
 #ifndef XDelay
 #define XDelay
 
-enum inputModes { 
+enum InputMode { 
   EXPOSURE, // exposure times
   CORRECTION, // additional correction, which is applied on top of 
   MILLIS // millisenconds
@@ -14,6 +14,7 @@ long currentCorrection; // the
 
 bool valueChanged = false;
 
-//int currentMode = inputModes.MILLIS; // the current input mode
+InputMode currentMode = EXPOSURE;
+
 
 #endif
