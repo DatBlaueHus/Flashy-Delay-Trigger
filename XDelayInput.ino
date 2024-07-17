@@ -186,8 +186,15 @@ String formatExposureTime(int index) {
   if (time >= 1.0) {
     return String(time, 0) + "\"";
   } else {
-    int denominator = round(1.0 / time);
-    return "1/" + String(denominator);
+    float denominator = 1.0 / time;
+    int roundedDenominator = (int)(denominator + 0.5); // Properly round the denominator
+
+    // Check if the rounded denominator is close enough to the actual denominator
+    if (abs(denominator - roundedDenominator) > 0.01) {
+      return "1/" + String(denominator, 1);
+    } else {
+      return "1/" + String(roundedDenominator);
+    }
   }
 }
 
