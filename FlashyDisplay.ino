@@ -3,6 +3,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+#include "AppState.hpp"
 #include "FlashyDisplay.hpp"
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
@@ -51,12 +52,11 @@ void splashScreen(String appName, String version) {
   display.startscrollleft(0, 1);
 }
 
-
 void setupDisplay() {
  
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
-    Serial.println(F("SSD1306 allocation failed"));
+    PRINT(F("SSD1306 allocation failed"));
     for(;;); // Don't proceed, loop forever
   }
 
@@ -107,4 +107,27 @@ void displayText(String text, int iBox, bool highlight) {
     display.print(text);
   }
 }
+
+void printExposure() {
+  String changed = millisValue != calculateExposureMicroseconds(exposureIndex)/1000 ? "\xFA":"";
+  displayText(changed+formatExposureTime(exposureIndex), 1, currentMode == EXPOSURE);
+}
+
+void printCorrection() {
+  displayText(formatCorrectionValue(correctionValue), 3, currentMode == CORRECTION);
+}
+
+void printMillis() {
+  displayText(String(millisValue)+ "ms", 2, currentMode == MILLIS);
+}
+
+void updateSettingsDisplay() {
+  display.clearDisplay();
+  printExposure();
+  printCorrection();
+  printMillis();
+  display.display();
+  delay(10);
+}
+
 

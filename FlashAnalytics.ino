@@ -41,10 +41,9 @@ void setupFlashAnalytics(int analogPort) {
   sensRef = sensMax + 10;
 
   #if FASTADC
-    Serial.println("FAST ADC");
+    PRINT("FAST ADC");
   #endif
-  Serial.print("SensRef: ");
-  Serial.println(sensRef);
+  PRINT("SensRef: "+sensRef);
 }
 
 //handle the flash state, returns true if the flash was started

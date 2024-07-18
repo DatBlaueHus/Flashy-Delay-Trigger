@@ -1,3 +1,4 @@
+#include "AppState.hpp"
 #include "Utilities.hpp"
 
 #include "XSyncIn.hpp"
@@ -26,10 +27,8 @@ const int xOutPort = 4; // port for x-Output
 
 void setup() {
 
-  if (Serial.availableForWrite()) {
-    Serial.begin(115200);
-    while (! Serial);
-  }
+  setupSerialForDebug();
+
   setupDisplay();
   setupRotaryDelay(rotaryEncoder1, rotaryEncoder2, rotaryEncoderSwitch);
   setupFlashAnalytics(flashPort);
@@ -43,7 +42,7 @@ void loop() {
   if (xSyncTriggered) {
     xSyncTriggered = false;
     fireDelayedTrigger();
-//    Serial.println("Handle x-sync trigger!");
+  PRINT("Handle x-sync trigger!");
   }
   handleXTriggerState();
   handleFlashAnalyticsState();

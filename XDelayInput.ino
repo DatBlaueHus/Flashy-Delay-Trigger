@@ -4,31 +4,17 @@
 #include "AppState.hpp"
 #include "FlashyDisplay.hpp"
 
-enum InputMode { 
-  EXPOSURE, // exposure times
-  CORRECTION, // additional correction, which is applied on top of 
-  MILLIS // millisenconds
-  };
-
-InputMode currentMode = EXPOSURE;
-
 //The encoder – not statically instantiated because the port should be injected
 RotaryEncoder *encoder;
 
-// Define the fixed list of exposure times (in seconds) and their microsecond equivalents
-const float exposureTimes[] = {1.0/320, 1.0/250, 1.0/200, 1.0/160, 1.0/125, 1.0/100, 1.0/80, 1.0/60, 1.0/50, 1.0/40, 1.0/30, 1.0/25, 1.0/20, 1.0/15, 1.0/13, 1.0/10, 1.0/8, 1.0/6, 1.0/5, 1.0/4, 1.0/3, 1.0/2.5, 1.0/2, 1.0/1.6, 1.0/1.3, 1.0, 2.0, 4.0, 8.0};
-const int exposureCount = sizeof(exposureTimes) / sizeof(exposureTimes[0]);
+// port configuration
+int switchPort;
 
 // debounce
 const unsigned long longPressDelay = 500;
 const unsigned long debounceDelay = 100;    // the debounce time in ms; increase if the output flickers
 unsigned long lastDebounceTime = 0;  // the last time the output was toggled
 
-//Stores a changed index in EXPOSURE mode. Set in changes in EXPOSURE mode, Reset to -1 in changes in MILLIS mode
-static long userExposureIndex = -1;
-
-// port configuration
-int switchPort;
 
 //persitsing & debouncing
 const int EEPROMAddress = 0; // EEPROM address to store the current exposure time index
@@ -68,27 +54,6 @@ int findNearestExposureIndex(long milliseconds) {
 
 //DisplayHelpers ==================================================================================================
 
-void printExposure() {
-  String changed = millisValue != calculateExposureMicroseconds(exposureIndex)/1000 ? "\xFA":"";
-  displayText(changed+formatExposureTime(exposureIndex), 1, currentMode == EXPOSURE);
-}
-
-void printCorrection() {
-  displayText(formatCorrectionValue(correctionValue), 3, currentMode == CORRECTION);
-}
-
-void printMillis() {
-  displayText(String(millisValue)+ "ms", 2, currentMode == MILLIS);
-}
-
-void updateSettingsDisplay() {
-  display.clearDisplay();
-  printExposure();
-  printCorrection();
-  printMillis();
-  display.display();
-  delay(10);
-}
 
 // Formatters ==================================================================================================
 
