@@ -1,21 +1,26 @@
 #include <RotaryEncoder.h>
 #include <EEPROM.h>
 
-#include "XDelay.hpp"
+#include "AppState.hpp"
 #include "FlashyDisplay.hpp"
 
-//The encoder I do not statically 
+enum InputMode { 
+  EXPOSURE, // exposure times
+  CORRECTION, // additional correction, which is applied on top of 
+  MILLIS // millisenconds
+  };
+
+InputMode currentMode = EXPOSURE;
+
+//The encoder – not statically instantiated because the port should be injected
 RotaryEncoder *encoder;
 
 // Define the fixed list of exposure times (in seconds) and their microsecond equivalents
 const float exposureTimes[] = {1.0/320, 1.0/250, 1.0/200, 1.0/160, 1.0/125, 1.0/100, 1.0/80, 1.0/60, 1.0/50, 1.0/40, 1.0/30, 1.0/25, 1.0/20, 1.0/15, 1.0/13, 1.0/10, 1.0/8, 1.0/6, 1.0/5, 1.0/4, 1.0/3, 1.0/2.5, 1.0/2, 1.0/1.6, 1.0/1.3, 1.0, 2.0, 4.0, 8.0};
 const int exposureCount = sizeof(exposureTimes) / sizeof(exposureTimes[0]);
 
-int exposureIndex = 0;  // To keep track of the current exposure time
-long millisValue = 0; // Milliseconds value from the user input
-long correctionValue = 0; // Correction value in microseconds
-
 // debounce
+const unsigned long longPressDelay = 500;
 const unsigned long debounceDelay = 100;    // the debounce time in ms; increase if the output flickers
 unsigned long lastDebounceTime = 0;  // the last time the output was toggled
 
@@ -63,17 +68,26 @@ int findNearestExposureIndex(long milliseconds) {
 
 //DisplayHelpers ==================================================================================================
 
-void printMillis() {
-  displayText("Milliseconds: " + String(millisValue));
-}
-
 void printExposure() {
-  String changed = millisValue != calculateExposureMicroseconds(exposureIndex)/1000 ? "\xF7":"";
-  displayText("Exp: "+changed+formatExposureTime(exposureIndex));
+  String changed = millisValue != calculateExposureMicroseconds(exposureIndex)/1000 ? "\xFA":"";
+  displayText(changed+formatExposureTime(exposureIndex), 1, currentMode == EXPOSURE);
 }
 
 void printCorrection() {
-  displayText("Correction "+formatCorrectionValue(correctionValue));
+  displayText(formatCorrectionValue(correctionValue), 3, currentMode == CORRECTION);
+}
+
+void printMillis() {
+  displayText(String(millisValue)+ "ms", 2, currentMode == MILLIS);
+}
+
+void updateSettingsDisplay() {
+  display.clearDisplay();
+  printExposure();
+  printCorrection();
+  printMillis();
+  display.display();
+  delay(10);
 }
 
 // Formatters ==================================================================================================
@@ -97,7 +111,7 @@ String formatExposureTime(int index) {
 
 //Displays microseconds as ms with one digit after the point
 String formatCorrectionValue(int value) {
-  return String(value / 1000.0, 1) + " ms";
+  return String(value / 1000.0, 1) + "ms";
 }
 
 
@@ -142,7 +156,6 @@ void handleRotaryDelay() {
       }
     lastDebounceTime = millis();
   }
-  EEPROM.write(EEPROMAddress, exposureIndex);
 }
 
 void handleExposureInput(int newPos) {
@@ -156,7 +169,7 @@ void handleExposureInput(int newPos) {
   if (newPos != exposureIndex) {
     exposureIndex = newPos;
     millisValue = millisFromExposure();
-    printExposure();
+    updateSettingsDisplay();
   }
 }
 
@@ -167,8 +180,8 @@ void handleMillisInput(int newPos) {
   }
   if (millisValue != newPos) {
     millisValue = newPos;
-    printMillis();
     exposureIndex = findNearestExposureIndex(millisValue);
+    updateSettingsDisplay();
   }
 }
 
@@ -176,32 +189,54 @@ void handleCorrectionInput(int newPos) {
   int newCorrection = newPos * 100;
   if (correctionValue != newCorrection) {
     correctionValue = newCorrection;
-    printCorrection();
+    updateSettingsDisplay();
   }
 }
-
-
 
 void handleSwitchPress() {
   
   static unsigned long lastSwitchTime = 0;
-  static bool switchState = false;
-  if (digitalRead(switchPort) == LOW && millis() - lastSwitchTime > 300) {
-    lastSwitchTime = millis();
-    // Change mode on switch press
+  static bool previousSwitchState = false;
+  bool switchState = !digitalRead(switchPort);
+  if (previousSwitchState != switchState) { //State changed
+    if (switchState) { //Übergang nach On
+      lastSwitchTime = millis();
+      switchToNextMode();
+      previousSwitchState = switchState;
+      delay(20);
+    }
+    else { //Übergang nach Off
+      lastSwitchTime = 0;
+      previousSwitchState = switchState;
+      delay(20);
+    }
+  }
+  else if (switchState) {
+    if (lastSwitchTime != 0) {
+      if (millis() - lastSwitchTime > longPressDelay) { //Button is still pressed, and the long press delay passed
+        handleLongPress();
+        lastSwitchTime = 0; //we have handled this
+      }
+    }
+  }
+}
+
+void handleLongPress() {
+  //TODO: Move out, add correction and store the millis value!
+    EEPROM.write(EEPROMAddress, exposureIndex);
+}
+
+void switchToNextMode() {
     if (currentMode == EXPOSURE) {
       currentMode = CORRECTION;
-      printCorrection();
       encoder->setPosition(correctionValue / 100);
     } else if (currentMode == CORRECTION) {
       currentMode = MILLIS;
       encoder->setPosition(millisValue);
-      printMillis();
     } else {
       currentMode = EXPOSURE;
-      printExposure();
       exposureIndex = exposureFromMillis(); // set encoder Value nearest to milli
       encoder->setPosition(exposureIndex);
     }
-  }
+    updateSettingsDisplay();
 }

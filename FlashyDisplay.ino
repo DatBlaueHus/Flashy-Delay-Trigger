@@ -8,8 +8,6 @@
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
 
-
-
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 // The pins for I2C are defined by the Wire-library. 
 // On an arduino UNO:       A4(SDA), A5(SCL)
@@ -24,7 +22,7 @@ void baseDisplaySetup() {
   display.clearDisplay();
   display.display();
   
-  // Add a short delay to stabilize display, depending on your display you might be able to shorten it
+  // Add a delay to stabilize display, depending on your display you might be able to shorten it
   delay(1000);
   
   // Set display configurations
@@ -65,9 +63,13 @@ void setupDisplay() {
   baseDisplaySetup();
 
   String appName = "Flashy Delay Trigger";
-  String version = "Version 0.1b";
+  String version = "Version 0.1.1b";
   splashScreen(appName, version);
 }
+
+//The box configuration of the boxes
+static int box[3][4] = {{0,0,44,10},{44,0,44,10},{88,0,44,10}};
+int nBoxes = 3;
 
 /*!
 @brief  A simple text output at 0,0
@@ -76,12 +78,33 @@ void setupDisplay() {
 @param highlight: If true, highlight the box
 @note   The text will wrap hardly even within word borders
 */
-void displayText(String text, int box, bool highlight) {
+void displayText(String text, int iBox, bool highlight) {
   display.stopscroll();
-  display.clearDisplay();
-  display.setCursor(0, 0);     // Start at top-left corner
-  display.print(text);
-  display.display();
-  delay(10);
+  if (iBox <= 0 || iBox > nBoxes) { //Fallback, if boy is not set correctly
+    display.clearDisplay();
+    display.setCursor(0, 0);     // Start at top-left corner
+    display.print(text);
+    display.display();
+    delay(10);
+  }
+  else {
+    //Calculate the box
+    int16_t  x1, y1;
+    uint16_t w, h;
+    display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+    int i = iBox -1;
+    int t = 2;
+    int offseth = (box[i][2] - w) / 2;
+    int offsetv = (box[i][3] - h) / 2;
+    display.fillRect(box[i][0], box[i][1], box[i][2], box[i][3], SSD1306_BLACK);
+    //display.strokeRect(box[i][0], box[i][1], box[i][2], box[i][3], SSD1306_WHITE);
+    if (highlight) {
+      display.fillTriangle(box[i][0], box[i][1]+box[i][3]/2 - t, 
+                           box[i][0] + t, box[i][1]+box[i][3]/2,
+                           box[i][0], box[i][1]+box[i][3]/2 + t, SSD1306_WHITE);
+    }
+    display.setCursor(box[i][0] + offseth, box[i][1] + offsetv);     // Start at top-left corner
+    display.print(text);
+  }
 }
 
