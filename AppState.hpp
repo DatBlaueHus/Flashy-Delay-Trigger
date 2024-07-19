@@ -1,6 +1,24 @@
 #ifndef AppState
 #define AppState
 
+// Port configuration
+
+// analog port zero for flash analytics
+#define FLASHPORT 0 
+
+//digital in
+// PORT FOR X-SYNC SWITCH INPUT FROM CAMERA, MUST SUPPORT INTERRUPT
+#define XSYNCPORT 2
+// PORT FOR X-OUTPUT
+#define XOUTPORT 4
+// PORT FOR DIRECTION 1
+#define ROTARYENCODER1 7 
+// PORT FOR DIRECTION 2
+#define ROTARYENCODER2 8 
+// THE PORT TO SET UP FOR THE ROTARY ENCODER PUSH BUTTON
+#define ROTARYENCODERSWITCH 9 
+
+
 //controls Serial printing
 #define DEBUG_PRINT
 
@@ -17,16 +35,26 @@ int exposureIndex = 0;  // index of the currently selected user Index
 
 unsigned long currentDelayTime; // The effective delay in microseconds, based on the user's settings
 
+//The enum of the current InputHandlers
 enum InputMode { 
-  EXPOSURE, // exposure times
+  EXPOSURE, // exposure times as exposure or in milliseconds
   CORRECTION, // additional correction, which is applied on top of 
-  MILLIS // millisenconds
+  PREFS // preferences
   };
 
+InputMode currentMode; // The currently preferred Input mode
+
+enum InputUnit {
+  EXPOSUREVALUE,
+  MILLISECONDS,
+};
+
 //User settings
-InputMode currentMode = EXPOSURE; // The currently preferred Input mode
+InputUnit preferredInputUnit;
+
 long millisValue = 0; // Milliseconds value from the user input
 long correctionValue = 0; // Correction value in microseconds
 
+void saveUserPrefs();
 
 #endif
