@@ -8,13 +8,12 @@
 //The encoder – not statically instantiated because the port should be injected
 RotaryEncoder encoder = RotaryEncoder(ROTARYENCODER1, ROTARYENCODER2, RotaryEncoder::LatchMode::FOUR3);
 
-// debounce
 const unsigned long longPressDelay = 500;
-const unsigned long debounceDelay = 100;  // the debounce time in ms; increase if the output flickers
+const unsigned long debounceDelay = 10;  // the debounce time in ms; increase if the output flickers
 unsigned long lastDebounceTime = 0;       // the last time the output was toggled
 
 
-void setupRotaryDelay() {
+void setupRotaryInput() {
 
   // Pullup the 3 ports
   pinMode(ROTARYENCODER1, INPUT_PULLUP);
@@ -56,7 +55,6 @@ void handleRotaryDelay() {
 
 void handlePrefsInput(int newPos) {
   // not yet implemented
-  switchToNextMode();
 }
 
 void handleExposureInput(int newPos) {
@@ -120,11 +118,11 @@ void handleSwitchPress() {
 }
 
 void handleShortPress() {
-  DEBUG_PRINT("handleShortPress");
   if (currentMode == EXPOSURE || currentMode == CORRECTION) {
     switchToNextMode();
   }
   if (currentMode == PREFS) {
+
   }
   if (currentMode == SPLASH) {
     currentMode = EXPOSURE;
@@ -133,16 +131,19 @@ void handleShortPress() {
 }
 
 void handleLongPress() {
-  DEBUG_PRINT("handleLongPress");
   if (currentMode != PREFS) {
     encoder.setPosition(0);
     currentMode = PREFS;
     displayNeedsUpdate = true;
   }
+  else {
+    saveUserPrefs();
+    switchToNextMode();
+  }
 }
 
 void switchToNextMode() {
-  DEBUG_PRINT("switchToNextMode");
+  PRINT("switchToNextMode");
   if (currentMode == EXPOSURE) {
     currentMode = CORRECTION;
     encoder.setPosition(correctionValue / 100);

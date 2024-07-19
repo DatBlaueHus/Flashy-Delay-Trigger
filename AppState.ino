@@ -3,16 +3,18 @@
 #include "AppState.hpp"
 
 //persitsing & debouncing
-const int EEPROMAddress = 0; // EEPROM address to store the current exposure time index
+const int EEPROMAddress = 0;  // EEPROM address to store the current exposure time index
 
 //This sets up Serial only in Debug mode. It's a noop in builds that haven't define DEBUG_PRINT
 void setupSerialForDebug() {
-  #ifdef DEBUG_PRINT
-    if (Serial.availableForWrite()) {
-    Serial.begin(115200);
-    while (! Serial);
+#ifdef DEBUG_PRINT
+  if (Serial.availableForWrite()) {
+    Serial.begin(57600);
+    while (!Serial)
+      ;
+    Serial.println("Serial initialized");
   }
-  #endif
+#endif
 }
 
 //initializes app state from user prefs, if set
@@ -24,19 +26,16 @@ void setupLoadUserPrefs() {
   }
   millisValue = millisFromExposure();
   InputUnit preferredInputUnit = EXPOSUREVALUE;
-  millisValue = 0; // Milliseconds value from the user input
-  correctionValue = 0; // Correction value in microseconds
+  millisValue = 0;      // Milliseconds value from the user input
+  correctionValue = 0;  // Correction value in microseconds
   refreshCurrentDelayTime();
 }
 
 //updates the user prefs with the current value
 void saveUserPrefs() {
-  unsigned int eePromLength = EEPROM.length(); //Get the total number of bytes on the eeprom 
-  DEBUG_PRINT(eePromLength);
-
-  //TODO: Move out, add correction and store the millis value!
-//    EEPROM.write(EEPROMAddress, exposureIndex);
-  
+  unsigned int eePromLength = EEPROM.length();  //Get the total number of bytes on the eeprom
+  PRINT(eePromLength);
+  Serial.println(eePromLength);
 }
 
 void refreshCurrentDelayTime() {

@@ -4,9 +4,14 @@ bool handleInterrupt = false;
 
 void setupXSyncIn() {
   pinMode(XSYNCPORT, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(XSYNCPORT), handleChange, CHANGE);  //we need to attach an interrupt
-  delay(1);
-  handleInterrupt = true;
+  if (digitalPinToInterrupt(XSYNCPORT) == NOT_AN_INTERRUPT) {
+    PRINT("XSYNCPORT does not support interrupts! Please adjust the port in ");
+  } else {
+    attachInterrupt(digitalPinToInterrupt(XSYNCPORT), handleChange, CHANGE);  //we need to attach an interrupt
+    delay(1);
+    handleInterrupt = true;
+    PRINT("XSYNCPORT set up");
+  }
 }
 
 void handleChange() {
@@ -22,7 +27,7 @@ void handleChange() {
     xOff = micros();
     if (reportXSyncTime) {
       unsigned long elapsed = xOff - xOn;
-      DEBUG_PRINT("x-sync-Interval: " + microsAsMillis(elapsed));
+      PRINT("x-sync-Interval: " + microsAsMillis(elapsed));
     }
   }
 }

@@ -1,6 +1,9 @@
 #ifndef AppState
 #define AppState
 
+//#define DEBUG_PRINT
+#include "DebugPrint.hpp"
+
 #define APPNAME "Flashy Delay Trigger"
 #define VERSION "Version 0.0.3"
 
@@ -21,22 +24,12 @@
 // THE PORT TO SET UP FOR THE ROTARY ENCODER PUSH BUTTON
 #define ROTARYENCODERSWITCH 9 
 
-// Serial printing =======================================================
-
-#define DEBUG_PRINT
-
-#ifdef DEBUG_PRINT
-#define PRINT(x) Serial.println(x)
-#else
-#define PRINT(x)
-#endif
-
 // DATA =======================================================
 
 long currentDelayTime; // The effective X delay in microseconds, based on the user's settings
 
 //User input
-enum InputUnit {
+enum InputUnit:byte {
   EXPOSUREVALUE,
   MILLISECONDS,
 };
@@ -54,11 +47,11 @@ int exposureIndex = 0;  // index of the currently selected user Index
 // State =======================================================
 
 //The enum of the current InputHandlers
-enum InputMode { 
+enum InputMode:byte { 
   EXPOSURE, // exposure times as exposure or in milliseconds
   CORRECTION, // additional correction, which is applied on top of 
   PREFS, // preferences
-  SPLASH // spashscreen
+  SPLASH // splash screen
   };
 
 InputMode currentMode; // The currently set Input handler

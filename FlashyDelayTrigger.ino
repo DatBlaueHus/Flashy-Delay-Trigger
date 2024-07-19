@@ -9,7 +9,7 @@
 void setup() {
   setupSerialForDebug();
   setupLoadUserPrefs();
-  setupRotaryDelay();
+  setupRotaryInput();
   setupDisplay();
   setupFlashAnalytics();
   setupXSyncIn();
