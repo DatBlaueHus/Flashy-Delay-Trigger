@@ -1,7 +1,7 @@
 #ifndef KBUtilities
 #define KBUtilities
 
-void printMicrosAsMillis(unsigned long micros, String comment = "", int postPoint = 2);
+String microsAsMillis(long micros, int postPoint = 2);
 
 //formats the exposure time of the given index for display purposes
 String formatExposureTime(int index);

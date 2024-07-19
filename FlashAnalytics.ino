@@ -55,8 +55,8 @@ void handleFlashAnalyticsState() {
     if (flashIsOn) {
       unsigned long now = micros();
       flashIsOn = false;
-      printMicrosAsMillis(flashStartedAt - xOn, "Actual Flash delay: ");
-      printMicrosAsMillis(now - flashStartedAt, "duration: ", 3);
+      DEBUG_PRINT("Actual Flash delay: "+ microsAsMillis(flashStartedAt - xOn));
+      DEBUG_PRINT("duration: "+ microsAsMillis(now - flashStartedAt), 3);
     }
   }
 }

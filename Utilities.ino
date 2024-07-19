@@ -1,26 +1,26 @@
 #include "AppState.hpp"
 
 // Prints microseconds as ms, with a leading comment and postPoint digits after the decimal. Adds a linebreak
-void printMicrosAsMillis(unsigned long micros, String comment, int postPoint) {
-  float millis = micros * 0.001;
-  PRINT(comment + millis + postPoint + " ms");
+String microsAsMillis(long microseconds, int postPoint) {
+  return String(microseconds / 1000.0, postPoint) + "ms";
 }
 
 // Formatters ==================================================================================================
 
 String formatExposureTime(int index) {
+  String changed = millisValue != calculateExposureMicroseconds(exposureIndex) / 1000 ? "\xFA" : "";
   float time = exposureTimes[index];
   if (time >= 1.0) {
-    return String(time, 0) + "\"";
+    return changed + String(time, 0) + "\"";
   } else {
     float denominator = 1.0 / time;
     int roundedDenominator = (int)(denominator + 0.5);  // Properly round the denominator
 
     // Check if the rounded denominator is close enough to the actual denominator
     if (abs(denominator - roundedDenominator) > 0.01) {
-      return "1/" + String(denominator, 1);
+      return changed + "1/" + String(denominator, 1);
     } else {
-      return "1/" + String(roundedDenominator);
+      return changed + "1/" + String(roundedDenominator);
     }
   }
 }

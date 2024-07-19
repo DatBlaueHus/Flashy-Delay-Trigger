@@ -22,7 +22,7 @@ void setupRotaryDelay() {
   pinMode(ROTARYENCODERSWITCH, INPUT_PULLUP);
 
   // Set the encoder position to the saved position
-  encoder.setPosition(exposureIndex);
+  encoder.setPosition(0);
 }
 
 // Interrupt service routine to handle encoder updates
@@ -32,6 +32,10 @@ void handleRotaryDelay() {
   if (millis() - lastDebounceTime > debounceDelay) {
     int newPos = encoder.getPosition();
     if (currentMode == EXPOSURE) {
+      if (newPos < 0) {
+        newPos = exposureCount - 1;
+        encoder.setPosition(newPos);
+      }
       if (preferredInputUnit == EXPOSUREVALUE) {
         handleExposureInput(newPos);
       } else {
@@ -41,6 +45,10 @@ void handleRotaryDelay() {
       handleCorrectionInput(newPos);
     } else if (currentMode == PREFS) {
       handlePrefsInput(newPos);
+    } else if (currentMode == SPLASH) {
+      if (newPos != 0) {
+        switchToNextMode();
+      }
     }
     lastDebounceTime = millis();
   }
@@ -48,19 +56,18 @@ void handleRotaryDelay() {
 
 void handlePrefsInput(int newPos) {
   // not yet implemented
+  switchToNextMode();
 }
 
 void handleExposureInput(int newPos) {
-  if (newPos < 0) {
-    newPos = exposureCount - 1;
-    encoder.setPosition(newPos);
-  } else if (newPos >= exposureCount) {
+  if (newPos >= exposureCount) {
     newPos = 0;
     encoder.setPosition(newPos);
   }
   if (newPos != exposureIndex) {
     exposureIndex = newPos;
     millisValue = millisFromExposure();
+    refreshCurrentDelayTime();
     displayNeedsUpdate = true;
   }
 }
@@ -73,6 +80,7 @@ void handleMillisInput(int newPos) {
   if (millisValue != newPos) {
     millisValue = newPos;
     exposureIndex = findNearestExposureIndex(millisValue);
+    refreshCurrentDelayTime();
     displayNeedsUpdate = true;
   }
 }
@@ -81,6 +89,7 @@ void handleCorrectionInput(int newPos) {
   int newCorrection = newPos * 100;
   if (correctionValue != newCorrection) {
     correctionValue = newCorrection;
+    refreshCurrentDelayTime();
     displayNeedsUpdate = true;
   }
 }
@@ -92,7 +101,7 @@ void handleSwitchPress() {
   if (previousSwitchState != switchState) {  //State changed
     if (switchState) {                       //Übergang nach On
       lastSwitchTime = millis();
-      switchToNextMode();
+      handleShortPress();
       previousSwitchState = switchState;
       delay(20);
     } else {  //Übergang nach Off
@@ -110,16 +119,34 @@ void handleSwitchPress() {
   }
 }
 
+void handleShortPress() {
+  DEBUG_PRINT("handleShortPress");
+  if (currentMode == EXPOSURE || currentMode == CORRECTION) {
+    switchToNextMode();
+  }
+  if (currentMode == PREFS) {
+  }
+  if (currentMode == SPLASH) {
+    currentMode = EXPOSURE;
+    displayNeedsUpdate = true;
+  }
+}
+
 void handleLongPress() {
-  currentMode = PREFS;
-  displayNeedsUpdate = true;
+  DEBUG_PRINT("handleLongPress");
+  if (currentMode != PREFS) {
+    encoder.setPosition(0);
+    currentMode = PREFS;
+    displayNeedsUpdate = true;
+  }
 }
 
 void switchToNextMode() {
+  DEBUG_PRINT("switchToNextMode");
   if (currentMode == EXPOSURE) {
     currentMode = CORRECTION;
     encoder.setPosition(correctionValue / 100);
-  } else if (currentMode == CORRECTION || currentMode == PREFS) {
+  } else if (currentMode == CORRECTION || currentMode == PREFS || currentMode == SPLASH) {
     currentMode = EXPOSURE;
     if (preferredInputUnit == MILLISECONDS) {
       encoder.setPosition(millisValue);

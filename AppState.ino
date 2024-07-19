@@ -23,16 +23,22 @@ void setupLoadUserPrefs() {
     exposureIndex = 0;  // Default to the first exposure time if the index is out of range
   }
   millisValue = millisFromExposure();
-
-  currentMode = EXPOSURE;
   InputUnit preferredInputUnit = EXPOSUREVALUE;
   millisValue = 0; // Milliseconds value from the user input
   correctionValue = 0; // Correction value in microseconds
+  refreshCurrentDelayTime();
 }
 
 //updates the user prefs with the current value
 void saveUserPrefs() {
+  unsigned int eePromLength = EEPROM.length(); //Get the total number of bytes on the eeprom 
+  DEBUG_PRINT(eePromLength);
+
   //TODO: Move out, add correction and store the millis value!
 //    EEPROM.write(EEPROMAddress, exposureIndex);
   
+}
+
+void refreshCurrentDelayTime() {
+  currentDelayTime = millisValue * 1000 + correctionValue;
 }

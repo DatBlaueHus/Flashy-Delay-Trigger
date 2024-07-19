@@ -22,7 +22,7 @@ void handleChange() {
     xOff = micros();
     if (reportXSyncTime) {
       unsigned long elapsed = xOff - xOn;
-      printMicrosAsMillis(elapsed, "x-sync-Interval: ");
+      DEBUG_PRINT("x-sync-Interval: " + microsAsMillis(elapsed));
     }
   }
 }
