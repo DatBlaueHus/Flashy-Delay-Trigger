@@ -40,7 +40,6 @@ void setupLoadUserPrefs() {
   PRINT("temp: " + String(temp) + " > "+ String(preferredInputUnit));
   exposureIndex = findNearestExposureIndex(millis);
   refreshCurrentDelayTime();
-  setEncoderToState();
 }
 
 //updates the user prefs with the current value
@@ -61,6 +60,7 @@ void saveUserPrefs(bool includeUserValues) {
 
 //takes care that encoder is in line with the current input channel
 void setEncoderToState() {
+    if (encoderSetterXallback == nil) { return; }
   if (currentMode == CORRECTION) {
     encoderSetterXallback(correctionValue / 100);
   } else if (currentMode == EXPOSURE) {
