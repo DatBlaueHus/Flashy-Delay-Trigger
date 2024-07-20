@@ -6,6 +6,7 @@ void handleXTriggerState();
 void fireDelayedTrigger();
 
 unsigned long startedTriggerAt = 0;  // the clock in microseconds when the trigger was started
-unsigned long triggerDelay = 60000;  // the delay to add to the trigger signal
+
+#define TRIGGERONTIME 2000  // the time the trigger should stay on in microseconds
 
 #endif

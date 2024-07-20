@@ -28,7 +28,7 @@ void handleXTriggerState() {
   if (delayIsOn) {
     unsigned long now = micros();
     unsigned long interval = now - delayStartTime;
-    if (interval > triggerDelay) {
+    if (interval > currentDelayTime) {
       digitalWrite(XOUTPORT, HIGH);
       startedTriggerAt = micros();
       delayIsOn = false;
@@ -37,7 +37,7 @@ void handleXTriggerState() {
   } else if (triggerIsOn) {
     unsigned long now = micros();
     unsigned long interval = now - startedTriggerAt;
-    if (interval > currentDelayTime) {
+    if (interval > TRIGGERONTIME) {
       digitalWrite(XOUTPORT, LOW);
       triggerIsOn = false;
     }
