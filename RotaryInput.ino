@@ -81,6 +81,10 @@ void handleExposureInput(int newPos) {
   if (newPos != exposureIndex) {
     exposureIndex = newPos;
     millisValue = millisFromExposure();
+    #ifdef DEBUG_PRINT
+    Serial.println(millisValue);
+    #endif
+
     refreshCurrentDelayTime();
     displayNeedsUpdate = true;
   }
@@ -94,6 +98,9 @@ void handleMillisInput(int newPos) {
   if (millisValue != newPos) {
     millisValue = newPos;
     exposureIndex = findNearestExposureIndex(millisValue);
+    #ifdef DEBUG_PRINT
+    Serial.println(millisValue);
+    #endif
     refreshCurrentDelayTime();
     displayNeedsUpdate = true;
   }
@@ -103,6 +110,9 @@ void handleCorrectionInput(int newPos) {
   int newCorrection = newPos * 100;
   if (correctionValue != newCorrection) {
     correctionValue = newCorrection;
+    #ifdef DEBUG_PRINT
+    Serial.println(correctionValue);
+    #endif
     refreshCurrentDelayTime();
     displayNeedsUpdate = true;
   }

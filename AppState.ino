@@ -39,6 +39,7 @@ void setupLoadUserPrefs() {
   preferredInputUnit = (temp >= 0 && temp < 2) ? temp : EXPOSUREVALUE;
   PRINT("temp: " + String(temp) + " > "+ String(preferredInputUnit));
   exposureIndex = findNearestExposureIndex(millis);
+  correctionValue = -200; //right now EEProm readout is unbounded and often wrong
   refreshCurrentDelayTime();
 }
 
