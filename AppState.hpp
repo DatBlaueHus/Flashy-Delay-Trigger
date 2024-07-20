@@ -29,13 +29,17 @@
 
 long currentDelayTime; // The effective X delay in microseconds, based on the user's settings
 
+//sets the encoder to match the current input state
+void setEncoderToState();
+void (*encoderSetterXallback)(int);
+
 //User input
 enum InputUnit:byte {
   EXPOSUREVALUE,
   MILLISECONDS,
 };
 
-InputUnit preferredInputUnit;
+InputUnit preferredInputUnit; // the one that the user has set in the prefs
 long millisValue; // Milliseconds value from the user input
 long correctionValue; // Correction value in microseconds
 void saveUserPrefs();
@@ -56,6 +60,24 @@ enum InputMode:byte {
   };
 
 InputMode currentMode; // The currently set Input handler
+
+//switches to next screen
+void switchToNextMode();
+
+//open preference dialog
+void openPrefsDialog();
+
+bool closePrefDialog();
+
+//preference state
+//The highlighted element of the dialog
+bool handlePrefSelection();
+
+InputUnit selectedInputUnit;
+const int nPrefElements = 4;
+const int prefDefaultSelection = 3;
+int currentlyHighlightedPrefElement;
+bool includeUserValues;
 
 
 #endif

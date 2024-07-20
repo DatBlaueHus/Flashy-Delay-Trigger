@@ -10,7 +10,7 @@ RotaryEncoder encoder = RotaryEncoder(ROTARYENCODER1, ROTARYENCODER2, RotaryEnco
 
 const unsigned long longPressDelay = 500;
 const unsigned long debounceDelay = 10;  // the debounce time in ms; increase if the output flickers
-unsigned long lastDebounceTime = 0;       // the last time the output was toggled
+unsigned long lastDebounceTime = 0;      // the last time the output was toggled
 
 
 void setupRotaryInput() {
@@ -19,9 +19,14 @@ void setupRotaryInput() {
   pinMode(ROTARYENCODER1, INPUT_PULLUP);
   pinMode(ROTARYENCODER2, INPUT_PULLUP);
   pinMode(ROTARYENCODERSWITCH, INPUT_PULLUP);
+  
+  encoderSetterXallback = &setEncoder; //callback for the AppState to handle updates
 
-  // Set the encoder position to the saved position
-  encoder.setPosition(0);
+  setEncoderToState();
+}
+
+void setEncoder(int newPos) {
+  encoder.setPosition(newPos);
 }
 
 // Interrupt service routine to handle encoder updates
@@ -54,7 +59,18 @@ void handleRotaryDelay() {
 }
 
 void handlePrefsInput(int newPos) {
-  // not yet implemented
+  if (newPos < 0) {
+    newPos = nPrefElements - 1;
+    encoder.setPosition(newPos);
+  }
+  if (newPos != currentlyHighlightedPrefElement) {
+    int corrected = newPos % nPrefElements;
+    encoder.setPosition(corrected);
+    if (currentlyHighlightedPrefElement != corrected) {
+      currentlyHighlightedPrefElement = corrected;
+      displayNeedsUpdate = true;
+    }
+  }
 }
 
 void handleExposureInput(int newPos) {
@@ -122,7 +138,9 @@ void handleShortPress() {
     switchToNextMode();
   }
   if (currentMode == PREFS) {
-
+    if (closePrefDialog()) {
+      switchToNextMode();
+    }
   }
   if (currentMode == SPLASH) {
     currentMode = EXPOSURE;
@@ -131,30 +149,12 @@ void handleShortPress() {
 }
 
 void handleLongPress() {
-  if (currentMode != PREFS) {
-    encoder.setPosition(0);
-    currentMode = PREFS;
-    displayNeedsUpdate = true;
-  }
-  else {
-    saveUserPrefs();
-    switchToNextMode();
-  }
-}
-
-void switchToNextMode() {
-  PRINT("switchToNextMode");
-  if (currentMode == EXPOSURE) {
-    currentMode = CORRECTION;
-    encoder.setPosition(correctionValue / 100);
-  } else if (currentMode == CORRECTION || currentMode == PREFS || currentMode == SPLASH) {
-    currentMode = EXPOSURE;
-    if (preferredInputUnit == MILLISECONDS) {
-      encoder.setPosition(millisValue);
-    } else {
-      exposureIndex = exposureFromMillis();  // set encoder Value nearest to milli
-      encoder.setPosition(exposureIndex);
+  if (currentMode == PREFS) {
+    if (closePrefDialog()) {
+      switchToNextMode();
     }
   }
-  displayNeedsUpdate = true;
+  else {
+    openPrefsDialog();
+  }
 }
