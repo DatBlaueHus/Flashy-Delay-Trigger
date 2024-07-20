@@ -9,48 +9,123 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 //The box configuration of the boxes
-static int box[3][4] = {
-  { 0, 0, 66, 10 },
-  { 66, 0, 66, 10 },
-  { 0, 12, 132, 20 }
+const int nBoxes = 4;
+const int boxes[nBoxes][4] = {
+  { 0, 0, 66, 11 },
+  { 66, 0, 66, 11 },
+  { 0, 11, 132, 11 },
+  { 0, 22, 132, 10 }
 };
-int nBoxes = 3;
+
+// triangle at the left of the box
+void triangleLeft(int box[4], int t = 2) {
+  display.fillTriangle(box[0], box[1] + box[3] / 2 - t,
+                       box[0] + t, box[1] + box[3] / 2,
+                       box[0], box[1] + box[3] / 2 + t, SSD1306_WHITE);
+}
+
+// triangle at the right of the box
+void triangleRight(int box[4], int t = 2) {
+  display.fillTriangle(box[0] + box[2], box[1] + box[3] / 2 - t,
+                       box[0] + box[2] - t, box[1] + box[3] / 2,
+                       box[0] + box[2], box[1] + box[3] / 2 + t, SSD1306_WHITE);
+}
 
 /*!
-@brief  A simple text output at 0,0
+@brief  A simple text centered text output in the given box
 @param  text: The text to display
-@param box: The number of the text box where to place the text
+@param iBox: The index of the box where to place the text
 @param highlight: If true, highlight the box
 @note   The text will wrap hardly even within word borders
 */
 void displayText(String text, int iBox, bool highlight = false) {
-  display.stopscroll();
-  if (iBox <= 0 || iBox > nBoxes) {  //Fallback, if boy is not set correctly
-    display.clearDisplay();
-    display.setCursor(0, 0);  // Start at top-left corner
-    display.print(text);
-    display.display();
-    delay(10);
-  } else {
-    //Calculate the box
-    int16_t x1, y1;
-    uint16_t w, h;
-    display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
-    int i = iBox - 1;
-    int t = 2;
-    int offseth = (box[i][2] - w) / 2;
-    int offsetv = (box[i][3] - h) / 2;
-    display.fillRect(box[i][0], box[i][1], box[i][2], box[i][3], SSD1306_BLACK);
-    //display.strokeRect(box[i][0], box[i][1], box[i][2], box[i][3], SSD1306_WHITE);
-    if (highlight) {
-      display.fillTriangle(box[i][0], box[i][1] + box[i][3] / 2 - t,
-                           box[i][0] + t, box[i][1] + box[i][3] / 2,
-                           box[i][0], box[i][1] + box[i][3] / 2 + t, SSD1306_WHITE);
-    }
-    display.setCursor(box[i][0] + offseth, box[i][1] + offsetv);  // Start at top-left corner
-    display.print(text);
+  int* box = boxes[iBox];
+  fillBox(box);
+  if (highlight) {
+    triangleLeft(box);
+  }
+  //Calculate offset
+  int16_t* bounds = textBounds(text);
+
+  // int16_t x1, y1, w, h;
+  // display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+  int offset[2] = { (box[2] - bounds[2]) / 2, (box[3] - bounds[3]) / 2 };
+  printText(text, box, offset);
+}
+
+int16_t* textBounds(String text) {
+  static int16_t arr[4];
+  display.getTextBounds(text, 0, 0, arr, arr + 1, arr + 2, arr + 3);
+  return arr;
+}
+
+void displayRadio(String text, int iBox, bool selected = false, bool highlight = false) {
+  int* box = boxes[iBox];
+  int offset[2] = { box[3] + 3, 2 };  //TODO: Magic Numbers >:-/
+  fillBox(box);
+  circle(box, selected);
+  printText(text, box, offset);
+  if (highlight) {
+    invertBox(box);
   }
 }
+
+void displayCheckbox(String text, int iBox, bool selected = false, bool highlight = false) {
+  int* box = boxes[iBox];
+  int offset[2] = { box[3] + 3, 2 };  //TODO: Magic Numbers >:-/
+  fillBox(box);
+  square(box, selected);
+  printText(text, box, offset);
+  if (highlight) {
+    invertBox(box);
+  }
+}
+
+void displayButton(String text, int iBox, bool highlight = false) {
+  displayText(text, iBox);
+  int* box = boxes[iBox];
+  if (highlight) {
+    triangleLeft(box);
+    triangleRight(box);
+    invertBox(box);
+  }
+}
+
+//inverts the box
+void invertBox(int box[4]) {
+  display.fillRect(box[0], box[1], box[2], box[3], SSD1306_INVERSE);
+}
+
+// fills the given box with background color
+void fillBox(int box[4]) {
+  display.fillRect(box[0], box[1], box[2], box[3], SSD1306_BLACK);
+}
+
+//prints the text with the given offset in the box
+void printText(String text, int box[4], int offset[2]) {
+  display.setCursor(box[0] + offset[0], box[1] + offset[1]);
+  display.print(text);
+}
+
+void circle(int box[4], bool filled) {
+  int c = box[3] / 2;
+  int r = c - 1;  //TODO: Magic Numbers >:-/
+  display.drawCircle(box[0] + c, box[1] + c, r, SSD1306_WHITE);
+  if (filled) {
+    display.fillCircle(box[0] + c, box[1] + c, r - 2, SSD1306_WHITE);  //TODO: Magic Numbers >:-/
+  }
+}
+
+void square(int box[4], bool filled) {
+  int o = 1;  //TODO: Magic Numbers >:-/
+  int d = box[3] - 2 * o;
+
+  display.drawRect(box[0] + o, box[1] + o, d, d, SSD1306_WHITE);
+  if (filled) {
+    display.fillRect(box[0] + o + 2, box[1] + o + 2, d - 4, d - 4, SSD1306_WHITE);
+  }
+}
+
 
 void splashScreen() {
   int16_t x1, y1;
@@ -75,13 +150,12 @@ void splashScreen() {
 void settingsScreen() {
   display.clearDisplay();
   if (preferredInputUnit == MILLISECONDS) {
-    displayText(String(millisValue) + "ms", 1, currentMode == EXPOSURE);
+    displayText(String(millisValue) + "ms", 0, currentMode == EXPOSURE);
   } else {
-    displayText(formatExposureTime(exposureIndex), 1, currentMode == EXPOSURE);
+    displayText(formatExposureTime(exposureIndex), 0, currentMode == EXPOSURE);
   }
-  displayText(microsAsMillis(correctionValue, 1), 2, currentMode == CORRECTION);
-  displayText(currentDelayTime < 0 ? "0!" : microsAsMillis(currentDelayTime,1), 3);
-
+  displayText(microsAsMillis(correctionValue, 1), 1, currentMode == CORRECTION);
+  displayText(currentDelayTime < 0 ? "0!" : microsAsMillis(currentDelayTime, 1), 2);
   display.display();
   delay(10);
 }
@@ -89,7 +163,10 @@ void settingsScreen() {
 // Shows the splash screen
 void prefsScreen() {
   display.clearDisplay();
-  display.print("Prefs not implemented. Long Press to close");
+  displayRadio("Exposure", 0, selectedInputUnit == EXPOSURE, currentlyHighlightedPrefElement == 0);
+  displayRadio("ms", 1, selectedInputUnit == MILLISECONDS, currentlyHighlightedPrefElement == 1);  //
+  displayCheckbox("Save preset values", 2, includeUserValues, currentlyHighlightedPrefElement == 2);
+  displayButton("OK", 3, currentlyHighlightedPrefElement == 3);
   display.display();
 }
 
@@ -123,8 +200,10 @@ void updateDisplay() {
     if (currentMode == SPLASH) {
       splashScreen();
     } else if (currentMode == PREFS) {
+      display.stopscroll();
       prefsScreen();
     } else {
+      display.stopscroll();
       settingsScreen();
     }
   }

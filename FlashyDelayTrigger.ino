@@ -8,12 +8,12 @@
 
 void setup() {
   setupSerialForDebug();
-  setupLoadUserPrefs();
   setupRotaryInput();
   setupDisplay();
   setupFlashAnalytics();
   setupXSyncIn();
   setupXSyncOut();
+  setupLoadUserPrefs();
 }
 
 void loop() {
