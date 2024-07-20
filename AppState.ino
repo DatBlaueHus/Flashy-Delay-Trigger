@@ -61,7 +61,7 @@ void saveUserPrefs(bool includeUserValues) {
 
 //takes care that encoder is in line with the current input channel
 void setEncoderToState() {
-    if (encoderSetterXallback == nil) { return; }
+    if (encoderSetterXallback == NULL) { return; }
   if (currentMode == CORRECTION) {
     encoderSetterXallback(correctionValue / 100);
   } else if (currentMode == EXPOSURE) {
