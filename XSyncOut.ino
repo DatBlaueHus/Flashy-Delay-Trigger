@@ -2,8 +2,6 @@
 #include "XSyncOut.hpp"
 
 bool triggerIsOn = false;          // State of the trigger
-unsigned long triggerTime = 2000;  // the time the trigger should stay on in microseconds
-
 bool delayIsOn = false;            // State of the delay
 unsigned long delayStartTime = 0;  // the timestamp when the delay was started
 
@@ -39,7 +37,7 @@ void handleXTriggerState() {
   } else if (triggerIsOn) {
     unsigned long now = micros();
     unsigned long interval = now - startedTriggerAt;
-    if (interval > triggerTime) {
+    if (interval > currentDelayTime) {
       digitalWrite(XOUTPORT, LOW);
       triggerIsOn = false;
     }
