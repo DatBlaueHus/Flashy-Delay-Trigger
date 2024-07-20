@@ -40,8 +40,8 @@ enum InputUnit:byte {
 };
 
 InputUnit preferredInputUnit; // the one that the user has set in the prefs
-long millisValue; // Milliseconds value from the user input
-long correctionValue; // Correction value in microseconds
+long millisValue = 0; // Milliseconds value from the user input
+long correctionValue = 0; // Correction value in microseconds
 void saveUserPrefs();
 
 // Defines the fixed list of exposure times (in seconds) and their microsecond equivalents
@@ -77,7 +77,7 @@ InputUnit selectedInputUnit;
 const int nPrefElements = 4;
 const int prefDefaultSelection = 3;
 int currentlyHighlightedPrefElement;
-bool includeUserValues;
+bool includeUserValues = true;
 
 
 #endif
