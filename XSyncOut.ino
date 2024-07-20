@@ -5,7 +5,6 @@ bool triggerIsOn = false;          // State of the trigger
 bool delayIsOn = false;            // State of the delay
 unsigned long delayStartTime = 0;  // the timestamp when the delay was started
 
-
 void setupXSyncOut() {
   pinMode(XOUTPORT, OUTPUT);
 }
@@ -30,6 +29,9 @@ void handleXTriggerState() {
     unsigned long interval = now - delayStartTime;
     if (interval > currentDelayTime) {
       digitalWrite(XOUTPORT, HIGH);
+#ifdef DEBUG_PRINT
+      Serial.println("Delayed trigger fired!! **");
+#endif
       startedTriggerAt = micros();
       delayIsOn = false;
       triggerIsOn = true;
@@ -39,6 +41,9 @@ void handleXTriggerState() {
     unsigned long interval = now - startedTriggerAt;
     if (interval > TRIGGERONTIME) {
       digitalWrite(XOUTPORT, LOW);
+#ifdef DEBUG_PRINT
+      Serial.println("Trigger switched off!");
+#endif
       triggerIsOn = false;
     }
   }

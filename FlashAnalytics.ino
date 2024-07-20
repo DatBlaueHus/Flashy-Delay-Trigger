@@ -33,9 +33,11 @@ void setReferenceLevel() {
   }
   sensRef = sensMax + 10;  //TODO: Rather go for an activation on the raise versus the previous level
 
-  PRINT("SensRef: " + String(sensRef));
-  PRINT("sensMin: " + String(sensMin));
-  PRINT("sensMax: " + String(sensMax));
+#ifdef DEBUG_PRINT
+  Serial.println("SensRef: " + String(sensRef));
+  Serial.println("sensMin: " + String(sensMin));
+  Serial.println("sensMax: " + String(sensMax));
+#endif
 }
 
 void setupFlashAnalytics() {
@@ -49,10 +51,12 @@ void setupFlashAnalytics() {
   sbi(ADCSRA, ADPS2);
   cbi(ADCSRA, ADPS1);
   cbi(ADCSRA, ADPS0);
-  PRINT("FAST ADC enabled");
-#endif
+#ifdef DEBUG_PRINT
+  Serial.println("FAST ADC enabled");
+#endif  //DEBUG_PRINT
+#endif  //FASTADC
 
-setReferenceLevel();
+  setReferenceLevel();
 }
 
 //handle the flash state, returns true if the flash was started
@@ -68,8 +72,10 @@ void handleFlashAnalyticsState() {
     if (flashIsOn) {
       unsigned long now = micros();
       flashIsOn = false;
-      PRINT("Actual Flash delay: " + microsAsMillis(flashStartedAt - xOn));
-      PRINT("duration: " + microsAsMillis(now - flashStartedAt, 3));
+#ifdef DEBUG_PRINT
+      Serial.println("Actual Flash delay: " + microsAsMillis(flashStartedAt - xOn));
+      Serial.println("duration: " + microsAsMillis(now - flashStartedAt, 3));
+#endif
     }
   }
 }

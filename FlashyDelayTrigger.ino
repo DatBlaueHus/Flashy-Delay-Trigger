@@ -20,11 +20,9 @@ void loop() {
   if (xSyncTriggered) {
     xSyncTriggered = false;
     fireDelayedTrigger();
-    PRINT("Handle x-sync trigger!");
   }
   handleXTriggerState();
   handleFlashAnalyticsState();
   handleRotaryDelay();
   updateDisplay();
 }
-

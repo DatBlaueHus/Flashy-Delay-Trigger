@@ -26,9 +26,9 @@ void triangleLeft(int box[4], int t = 2) {
 
 // triangle at the right of the box
 void triangleRight(int box[4], int t = 2) {
-  display.fillTriangle(box[0] + box[2], box[1] + box[3] / 2 - t,
-                       box[0] + box[2] - t, box[1] + box[3] / 2,
-                       box[0] + box[2], box[1] + box[3] / 2 + t, SSD1306_WHITE);
+  display.fillTriangle(box[0] + box[2] - t -1, box[1] + box[3] / 2,
+                    box[0] + box[2]-1, box[1] + box[3] / 2 - t,
+                    box[0] + box[2]-1, box[1] + box[3] / 2 + t, SSD1306_WHITE);
 }
 
 /*!
@@ -155,7 +155,7 @@ void settingsScreen() {
     displayText(formatExposureTime(exposureIndex), 0, currentMode == EXPOSURE);
   }
   displayText(microsAsMillis(correctionValue, 1), 1, currentMode == CORRECTION);
-  displayText(currentDelayTime < 0 ? "0!" : microsAsMillis(currentDelayTime, 1), 2);
+  displayText(currentDelayTime < 0 ? "Can not time travel back in time" : microsAsMillis(currentDelayTime, 1), 2);
   display.display();
   delay(10);
 }
@@ -185,7 +185,9 @@ void baseDisplaySetup() {
 void setupDisplay() {
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
-    PRINT(F("SSD1306 allocation failed"));
+#ifdef DEBUG_PRINT
+    Serial.println(F("SSD1306 allocation failed"));
+#endif
     for (;;)
       ;  // Don't proceed, loop forever
   }

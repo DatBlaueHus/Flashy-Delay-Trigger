@@ -2,7 +2,11 @@
 
 // Prints microseconds as ms, with a leading comment and postPoint digits after the decimal. Adds a linebreak
 String microsAsMillis(long microseconds, int postPoint) {
-  return String(microseconds / 1000.0, postPoint) + " ms";
+  String res = String(microseconds / 1000.0, postPoint) + " ms";
+  #ifdef DEBUG_PRINT
+  Serial.println(res);
+  #endif
+  return res;
 }
 
 // Formatters ==================================================================================================

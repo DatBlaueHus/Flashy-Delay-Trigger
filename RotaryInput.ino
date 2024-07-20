@@ -19,8 +19,8 @@ void setupRotaryInput() {
   pinMode(ROTARYENCODER1, INPUT_PULLUP);
   pinMode(ROTARYENCODER2, INPUT_PULLUP);
   pinMode(ROTARYENCODERSWITCH, INPUT_PULLUP);
-  
-  encoderSetterXallback = &setEncoder; //callback for the AppState to handle updates
+
+  encoderSetterXallback = &setEncoder;  //callback for the AppState to handle updates
 
   setEncoderToState();
 }
@@ -81,9 +81,9 @@ void handleExposureInput(int newPos) {
   if (newPos != exposureIndex) {
     exposureIndex = newPos;
     millisValue = millisFromExposure();
-    #ifdef DEBUG_PRINT
+#ifdef DEBUG_PRINT
     Serial.println(millisValue);
-    #endif
+#endif
 
     refreshCurrentDelayTime();
     displayNeedsUpdate = true;
@@ -98,9 +98,9 @@ void handleMillisInput(int newPos) {
   if (millisValue != newPos) {
     millisValue = newPos;
     exposureIndex = findNearestExposureIndex(millisValue);
-    #ifdef DEBUG_PRINT
+#ifdef DEBUG_PRINT
     Serial.println(millisValue);
-    #endif
+#endif
     refreshCurrentDelayTime();
     displayNeedsUpdate = true;
   }
@@ -110,9 +110,9 @@ void handleCorrectionInput(int newPos) {
   int newCorrection = newPos * 100;
   if (correctionValue != newCorrection) {
     correctionValue = newCorrection;
-    #ifdef DEBUG_PRINT
+#ifdef DEBUG_PRINT
     Serial.println(correctionValue);
-    #endif
+#endif
     refreshCurrentDelayTime();
     displayNeedsUpdate = true;
   }
@@ -163,8 +163,7 @@ void handleLongPress() {
     if (closePrefDialog()) {
       switchToNextMode();
     }
-  }
-  else {
+  } else {
     openPrefsDialog();
   }
 }

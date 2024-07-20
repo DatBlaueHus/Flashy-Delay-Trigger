@@ -3,7 +3,7 @@
 #include "AppState.hpp"
 
 void refreshCurrentDelayTime() {
-  currentDelayTime = millisValue * 1000 + correctionValue;
+  currentDelayTime = max(millisValue * 1000 + correctionValue,0);
 }
 
 //This sets up Serial only in Debug mode. It's a noop in builds that haven't define DEBUG_PRINT
@@ -13,6 +13,7 @@ void setupSerialForDebug() {
     Serial.begin(57600);
     while (!Serial)
       ;
+    delay(100);
     Serial.println("Serial initialized");
   }
 #endif
@@ -27,41 +28,43 @@ const int EEPROMAddressInputMode = 18;   // 1 byte for byte inputMode
 void setupLoadUserPrefs() {
   // Load the last saved values from EEPROM
   EEPROM.get(EEPROMAddressMillis, millisValue);
-  PRINT("Millis read: " + String(millisValue));
+#ifdef DEBUG_PRINT
+  Serial.println("Millis read: " + String(millisValue));
+#endif
   if (millisValue < 0) { millisValue = 0; }
-  PRINT("Millis corrected: " + String(millisValue));
-
+#ifdef DEBUG_PRINT
+  Serial.println("Millis corrected: " + String(millisValue));
+#endif
   EEPROM.get(EEPROMAddressCorrection, correctionValue);
-  PRINT("Correction read: " + String());
+#ifdef DEBUG_PRINT
+  Serial.println("Correction read: " + String());
+#endif
 
   byte temp;
   EEPROM.get(EEPROMAddressInputMode, temp);
   preferredInputUnit = (temp >= 0 && temp < 2) ? temp : EXPOSUREVALUE;
-  PRINT("temp: " + String(temp) + " > "+ String(preferredInputUnit));
+#ifdef DEBUG_PRINT
+  Serial.println("temp: " + String(temp) + " > " + String(preferredInputUnit));
+#endif
   exposureIndex = findNearestExposureIndex(millis);
-  correctionValue = -200; //right now EEProm readout is unbounded and often wrong
+  correctionValue = -200;  //right now EEProm readout is unbounded and often wrong
   refreshCurrentDelayTime();
 }
 
 //updates the user prefs with the current value
 void saveUserPrefs(bool includeUserValues) {
   if (includeUserValues) {
-    PRINT("Millis written: " + String(millisValue));
     EEPROM.put(millisValue, EEPROMAddressMillis);
-//    writeLongToEEProm(EEPROMAddressMillis, millisValue);
-    PRINT("Correction written: " + String(correctionValue));
     EEPROM.put(correctionValue, EEPROMAddressCorrection);
-//    writeLongToEEProm(EEPROMAddressCorrection, correctionValue);
   }
-  PRINT("preferredInputUnit written: " + String(preferredInputUnit));
-      EEPROM.put(preferredInputUnit, EEPROMAddressInputMode);
+  EEPROM.put(preferredInputUnit, EEPROMAddressInputMode);
 }
 
 // state
 
 //takes care that encoder is in line with the current input channel
 void setEncoderToState() {
-    if (encoderSetterXallback == NULL) { return; }
+  if (encoderSetterXallback == NULL) { return; }
   if (currentMode == CORRECTION) {
     encoderSetterXallback(correctionValue / 100);
   } else if (currentMode == EXPOSURE) {
@@ -78,7 +81,9 @@ void setEncoderToState() {
 
 //switches to next screen
 void switchToNextMode() {
-  PRINT("switchToNextMode");
+#ifdef DEBUG_PRINT
+  Serial.println(F("switchToNextMode"));
+#endif
   if (currentMode == EXPOSURE) {
     currentMode = CORRECTION;
   } else if (currentMode == CORRECTION || currentMode == PREFS || currentMode == SPLASH) {
@@ -91,17 +96,19 @@ void switchToNextMode() {
 // Prefernce Dialog ===================================================================
 
 void openPrefsDialog() {
-    selectedInputUnit = preferredInputUnit;
-    includeUserValues = true;
-    currentlyHighlightedPrefElement = prefDefaultSelection;
-    currentMode = PREFS;
-    setEncoderToState();
-    displayNeedsUpdate = true;
+  selectedInputUnit = preferredInputUnit;
+  includeUserValues = true;
+  currentlyHighlightedPrefElement = prefDefaultSelection;
+  currentMode = PREFS;
+  setEncoderToState();
+  displayNeedsUpdate = true;
 }
 
-//returns true if the dialog has handled the selection, or false if 
+//returns true if the dialog has handled the selection, or false if
 bool closePrefDialog() {
-  PRINT("currentlyHighlightedPrefElement"+String(currentlyHighlightedPrefElement));
+#ifdef DEBUG_PRINT
+  Serial.println("currentlyHighlightedPrefElement" + String(currentlyHighlightedPrefElement));
+#endif
   if (currentlyHighlightedPrefElement == 0 || currentlyHighlightedPrefElement == 1) {
     selectedInputUnit = selectedInputUnit == EXPOSURE ? MILLISECONDS : EXPOSURE;
   } else if (currentlyHighlightedPrefElement == 2) {
@@ -111,7 +118,7 @@ bool closePrefDialog() {
     saveUserPrefs(includeUserValues);
     return true;
   }
-  currentlyHighlightedPrefElement = 3; // Switch to OK
+  currentlyHighlightedPrefElement = 3;  // Switch to OK
   displayNeedsUpdate = true;
   return false;
 }

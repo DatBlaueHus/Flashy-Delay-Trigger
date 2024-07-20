@@ -5,12 +5,13 @@ bool handleInterrupt = false;
 void setupXSyncIn() {
   pinMode(XSYNCPORT, INPUT_PULLUP);
   if (digitalPinToInterrupt(XSYNCPORT) == NOT_AN_INTERRUPT) {
-    PRINT("XSYNCPORT does not support interrupts! Please adjust the port in ");
+#ifdef DEBUG_PRINT
+    Serial.println("XSYNCPORT does not support interrupts! Please adjust the port in ");
+#endif
   } else {
     attachInterrupt(digitalPinToInterrupt(XSYNCPORT), handleChange, CHANGE);  //we need to attach an interrupt
     delay(1);
     handleInterrupt = true;
-    PRINT("XSYNCPORT set up");
   }
 }
 
@@ -27,7 +28,9 @@ void handleChange() {
     xOff = micros();
     if (reportXSyncTime) {
       unsigned long elapsed = xOff - xOn;
-      PRINT("x-sync-Interval: " + microsAsMillis(elapsed));
+#ifdef DEBUG_PRINT
+      Serial.println("x-sync-Interval: " + microsAsMillis(elapsed));
+#endif
     }
   }
 }
