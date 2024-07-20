@@ -3,7 +3,9 @@
 #include "AppState.hpp"
 
 //persitsing & debouncing
-const int EEPROMAddress = 0;  // EEPROM address to store the current exposure time index
+const int EEPROMAddressMillis = 0;  // 4 bytes for long millis
+const int EEPROMAddressCorrection = 4;  // 4 bytes for long correction
+const int EEPROMAddressInputMode = 8;  // 1 byte for byte inputMode
 
 //This sets up Serial only in Debug mode. It's a noop in builds that haven't define DEBUG_PRINT
 void setupSerialForDebug() {
@@ -19,23 +21,23 @@ void setupSerialForDebug() {
 
 //initializes app state from user prefs, if set
 void setupLoadUserPrefs() {
-  // Load the last saved exposure time index from EEPROM
-  exposureIndex = EEPROM.read(EEPROMAddress);
-  if (exposureIndex < 0 || exposureIndex >= exposureCount) {
-    exposureIndex = 0;  // Default to the first exposure time if the index is out of range
-  }
-  millisValue = millisFromExposure();
-  InputUnit preferredInputUnit = EXPOSUREVALUE;
-  millisValue = 0;      // Milliseconds value from the user input
-  correctionValue = 0;  // Correction value in microseconds
+  // Load the last saved values from EEPROM
+  millisValue = EEPROM.read(EEPROMAddressMillis);
+  if (millisValue < 0) { millisValue = 0; }
+  correctionValue = EEPROM.read(EEPROMAddressCorrection);
+  byte temp = EEPROM.read(EEPROMAddressInputMode);
+  preferredInputUnit = (temp >= 0 && temp < 2) ? temp : EXPOSUREVALUE;
+  exposureIndex = findNearestExposureIndex(millis);
   refreshCurrentDelayTime();
 }
 
 //updates the user prefs with the current value
 void saveUserPrefs() {
+
+#ifdef DEBUG_PRINT
   unsigned int eePromLength = EEPROM.length();  //Get the total number of bytes on the eeprom
   PRINT(eePromLength);
-  Serial.println(eePromLength);
+#endif
 }
 
 void refreshCurrentDelayTime() {

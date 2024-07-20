@@ -1,8 +1,6 @@
 #ifndef DEBUG_PRINT_HPP
 #define DEBUG_PRINT_HPP
 
-#include <Arduino.h>
-
 // Uncomment the following line to enable debug prints
 //#define DEBUG_PRINT
 

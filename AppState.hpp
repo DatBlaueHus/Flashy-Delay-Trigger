@@ -1,7 +1,8 @@
 #ifndef AppState
 #define AppState
 
-//#define DEBUG_PRINT
+//Comment out to remove all print statements
+#define DEBUG_PRINT
 #include "DebugPrint.hpp"
 
 #define APPNAME "Flashy Delay Trigger"
