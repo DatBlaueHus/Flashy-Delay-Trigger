@@ -6,8 +6,20 @@
 #include "AppState.hpp"
 #include "FlashyDisplay.hpp"
 
+//Fallback to small screen as soon as DEBUG_PRINT is enabled, because we're so toght on memory that the display doesn't load anymore in bug screen mode
+#ifndef DEBUG_PRINT
+    #define BIGSCREEN //Use display in 128 x 64, if not set, fallback
+#endif
+
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
+
+#ifdef BIGSCREEN
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#else
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
+#endif //BIGSCREEN
+
+#define ROTATE_SCREEN 2 // Screen rotation, 0 normal, 2 = rotated by 180°
 
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 // The pins for I2C are defined by the Wire-library.
@@ -21,18 +33,29 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 //The box configuration of the boxes
 const int nBoxes = 4;
+
+#ifdef BIGSCREEN
+const int boxes[nBoxes][4] = {
+  { 0, 0, 64, 16 },
+  { 64, 0, 64, 16 },
+  { 0, 16, 128, 16 },
+  { 0, 32, 128, 16 }
+};
+#else
 const int boxes[nBoxes][4] = {
   { 0, 0, 64, 11 },
   { 64, 0, 64, 11 },
   { 0, 11, 128, 11 },
   { 0, 22, 128, 10 }
 };
+#endif //BIGSCREEN
+
 
 void setupDisplay() {
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
 #ifdef DEBUG_PRINT
-    Serial.println(F("SSD1306 allocation failed, display could not be started!"));
+    Serial.println(F("SSD1306 allocation failed"));
 #endif
     for (;;);  // Don't proceed, loop forever
   }
@@ -41,6 +64,17 @@ void setupDisplay() {
   displayNeedsUpdate = true;
 }
 
+void baseDisplaySetup() {
+  // Clear the buffer and display it once
+  display.clearDisplay();
+  display.setRotation(ROTATE_SCREEN);
+  display.display();
+  delay(1000);  // Add a delay to stabilize display, depending on your display you might be able to shorten it
+  // Set display configurations
+  display.cp437(true);                  // Use full 256 char 'Code Page 437' font
+  display.setTextSize(1);               // Normal 1:1 pixel scale
+  display.setTextColor(SSD1306_WHITE);  // Draw white text
+}
 
 // triangle at the left of the box
 void triangleLeft(int box[4], int t = 2) {
@@ -168,7 +202,12 @@ void splashScreen() {
   display.display();
   // Add a short delay before starting the scroll
   delay(500);
-  display.startscrollleft(0, 1);
+  if (ROTATE_SCREEN == 0) {
+    display.startscrollleft(0, 1);
+  }
+  else {
+    display.startscrollright(5, 7);
+  }
 }
 
 void settingsScreen() {
@@ -179,7 +218,7 @@ void settingsScreen() {
     displayText(formatExposureTime(exposureIndex), 0, currentMode == EXPOSURE);
   }
   displayText(microsAsMillis(correctionValue, 1), 1, currentMode == CORRECTION);
-  displayText(currentDelayTime < 0 ? "Can not time travel back in time" : microsAsMillis(currentDelayTime, 1), 2);
+  displayText(microsAsMillis(currentDelayTime, 1), 2);
   displayText(info,3);
   display.display();
   delay(10);
@@ -188,25 +227,12 @@ void settingsScreen() {
 // Shows the splash screen
 void prefsScreen() {
   display.clearDisplay();
-  displayRadio("Exposure", 0, selectedInputUnit == EXPOSURE, currentlyHighlightedPrefElement == 0);
-  displayRadio("ms", 1, selectedInputUnit == MILLISECONDS, currentlyHighlightedPrefElement == 1);  //
-  displayCheckbox("Save preset values", 2, includeUserValues, currentlyHighlightedPrefElement == 2);
-  displayButton("OK", 3, currentlyHighlightedPrefElement == 3);
+  displayRadio(F("Exposure"), 0, selectedInputUnit == EXPOSURE, currentlyHighlightedPrefElement == 0);
+  displayRadio(F("ms"), 1, selectedInputUnit == MILLISECONDS, currentlyHighlightedPrefElement == 1);  //
+  displayCheckbox(F("Save preset values"), 2, includeUserValues, currentlyHighlightedPrefElement == 2);
+  displayButton(F("OK"), 3, currentlyHighlightedPrefElement == 3);
   display.display();
 }
-
-void baseDisplaySetup() {
-  // Clear the buffer and display it once
-  display.clearDisplay();
-  display.display();
-
-  delay(1000);  // Add a delay to stabilize display, depending on your display you might be able to shorten it
-  // Set display configurations
-  display.cp437(true);                  // Use full 256 char 'Code Page 437' font
-  display.setTextSize(1);               // Normal 1:1 pixel scale
-  display.setTextColor(SSD1306_WHITE);  // Draw white text
-}
-
 
 void updateDisplay() {
   if (displayNeedsUpdate) {

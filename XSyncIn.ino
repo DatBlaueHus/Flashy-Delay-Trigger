@@ -6,7 +6,7 @@ void setupXSyncIn() {
   pinMode(XSYNCPORT, INPUT_PULLUP);
   if (digitalPinToInterrupt(XSYNCPORT) == NOT_AN_INTERRUPT) {
 #ifdef DEBUG_PRINT
-    Serial.println("XSYNCPORT does not support interrupts! Please adjust the port in ");
+    Serial.println(F("XSYNCPORT does'nt support interrupts!"));
 #endif
   } else {
     attachInterrupt(digitalPinToInterrupt(XSYNCPORT), handleChange, CHANGE);  //we need to attach an interrupt

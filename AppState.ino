@@ -14,7 +14,6 @@ void setupSerialForDebug() {
     while (!Serial)
       ;
     delay(100);
-    Serial.println("Serial initialized");
   }
 #endif
 }
@@ -30,22 +29,22 @@ void setupLoadUserPrefs() {
   // Load the last saved values from EEPROM
   EEPROM.get(EEPROMAddressMillis, millisValue);
 #ifdef DEBUG_PRINT
-  Serial.println("Millis read: " + String(millisValue));
+  Serial.println("Millis in: " + String(millisValue));
 #endif
   if (millisValue < 0) { millisValue = 0; }
 #ifdef DEBUG_PRINT
-  Serial.println("Millis corrected: " + String(millisValue));
+  Serial.println("Millis corr: " + String(millisValue));
 #endif
   EEPROM.get(EEPROMAddressCorrection, correctionValue);
 #ifdef DEBUG_PRINT
-  Serial.println("Correction read: " + String());
+  Serial.println("Corr. in: " + String());
 #endif
 
   byte temp;
   EEPROM.get(EEPROMAddressInputMode, temp);
   preferredInputUnit = (temp >= 0 && temp < 2) ? temp : EXPOSUREVALUE;
 #ifdef DEBUG_PRINT
-  Serial.println("temp: " + String(temp) + " > " + String(preferredInputUnit));
+  Serial.println("inp: " + String(temp) + " > " + String(preferredInputUnit));
 #endif
   exposureIndex = findNearestExposureIndex(millis);
   correctionValue = -200;  //right now EEProm readout is unbounded and often wrong
@@ -84,7 +83,7 @@ void setEncoderToState() {
 //switches to next screen
 void switchToNextMode() {
 #ifdef DEBUG_PRINT
-  Serial.println(F("switchToNextMode"));
+  Serial.println(F("switchMode"));
 #endif
   if (currentMode == EXPOSURE) {
     currentMode = CORRECTION;

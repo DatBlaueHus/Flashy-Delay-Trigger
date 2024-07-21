@@ -30,7 +30,7 @@ void handleXTriggerState() {
     if (interval > currentDelayTime) {
       digitalWrite(XOUTPORT, HIGH);
 #ifdef DEBUG_PRINT
-      Serial.println("Delayed trigger fired!! **");
+      Serial.println(F("Delayed trigger fired!! **"));
 #endif
       startedTriggerAt = micros();
       delayIsOn = false;
@@ -42,7 +42,7 @@ void handleXTriggerState() {
     if (interval > TRIGGERONTIME) {
       digitalWrite(XOUTPORT, LOW);
 #ifdef DEBUG_PRINT
-      Serial.println("Trigger switched off!");
+      Serial.println(F("Trigger switched off!"));
 #endif
       triggerIsOn = false;
     }

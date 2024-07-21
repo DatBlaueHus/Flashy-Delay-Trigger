@@ -52,7 +52,7 @@ void setupFlashAnalytics() {
   cbi(ADCSRA, ADPS1);
   cbi(ADCSRA, ADPS0);
 #ifdef DEBUG_PRINT
-  Serial.println("FAST ADC enabled");
+  Serial.println(F("FAST ADC enabled"));
 #endif  //DEBUG_PRINT
 #endif  //FASTADC
 

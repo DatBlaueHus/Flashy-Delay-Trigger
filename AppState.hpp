@@ -1,11 +1,11 @@
 #ifndef AppState
 #define AppState
 
-//Comment out to remove all print statements
+//Comment out to remove all Serial.print statements
 //#define DEBUG_PRINT
 
-#define APPNAME "Flashy Delay Trigger"
-#define VERSION "Version 0.0.3"
+#define APPNAME F("Flashy Delay Trigger")
+#define VERSION F("Version 0.0.3")
 
 // Port configuration =======================================================
 
