@@ -6,13 +6,8 @@
 #include "AppState.hpp"
 #include "FlashyDisplay.hpp"
 
-//Comment out to use 
-#define WIDEDisplay
-
-
-
-#define SCREEN_WIDTH 128  // OLED display width, in pixels
-#define SCREEN_HEIGHT 32  // OLED display height, in pixels
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 32 // OLED display height, in pixels
 
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 // The pins for I2C are defined by the Wire-library.
@@ -27,11 +22,25 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 //The box configuration of the boxes
 const int nBoxes = 4;
 const int boxes[nBoxes][4] = {
-  { 0, 0, 66, 11 },
-  { 66, 0, 66, 11 },
-  { 0, 11, 132, 11 },
-  { 0, 22, 132, 10 }
+  { 0, 0, 64, 11 },
+  { 64, 0, 64, 11 },
+  { 0, 11, 128, 11 },
+  { 0, 22, 128, 10 }
 };
+
+void setupDisplay() {
+  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+#ifdef DEBUG_PRINT
+    Serial.println(F("SSD1306 allocation failed, display could not be started!"));
+#endif
+    for (;;);  // Don't proceed, loop forever
+  }
+  baseDisplaySetup();
+  currentMode = SPLASH;
+  displayNeedsUpdate = true;
+}
+
 
 // triangle at the left of the box
 void triangleLeft(int box[4], int t = 2) {
@@ -198,19 +207,6 @@ void baseDisplaySetup() {
   display.setTextColor(SSD1306_WHITE);  // Draw white text
 }
 
-void setupDisplay() {
-  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
-  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
-#ifdef DEBUG_PRINT
-    Serial.println(F("SSD1306 allocation failed"));
-#endif
-    for (;;)
-      ;  // Don't proceed, loop forever
-  }
-  baseDisplaySetup();
-  currentMode = SPLASH;
-  displayNeedsUpdate = true;
-}
 
 void updateDisplay() {
   if (displayNeedsUpdate) {

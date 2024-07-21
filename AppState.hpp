@@ -2,7 +2,7 @@
 #define AppState
 
 //Comment out to remove all print statements
-#define DEBUG_PRINT
+//#define DEBUG_PRINT
 
 #define APPNAME "Flashy Delay Trigger"
 #define VERSION "Version 0.0.3"
