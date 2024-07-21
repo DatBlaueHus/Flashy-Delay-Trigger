@@ -28,9 +28,7 @@ void handleChange() {
     xOff = micros();
     if (reportXSyncTime) {
       unsigned long elapsed = xOff - xOn;
-#ifdef DEBUG_PRINT
-      Serial.println("x-sync-Interval: " + microsAsMillis(elapsed));
-#endif
+      updateInfo("x-sync for " + String(microsAsMillis(elapsed, 3)));
     }
   }
 }

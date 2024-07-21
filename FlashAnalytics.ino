@@ -72,10 +72,13 @@ void handleFlashAnalyticsState() {
     if (flashIsOn) {
       unsigned long now = micros();
       flashIsOn = false;
-#ifdef DEBUG_PRINT
-      Serial.println("Actual Flash delay: " + microsAsMillis(flashStartedAt - xOn));
-      Serial.println("duration: " + microsAsMillis(now - flashStartedAt, 3));
-#endif
+      if (xOn == 0) {
+          updateInfo("\xFB for " + String(microsAsMillis(now - flashStartedAt, 3)));
+      }
+      else {
+          updateInfo(String(microsAsMillis(flashStartedAt - xOn)) + "\xFB for " + String(microsAsMillis(now - flashStartedAt, 3)));
+      }
+      xOn = 0;
     }
   }
 }

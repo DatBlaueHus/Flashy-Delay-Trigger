@@ -26,6 +26,7 @@ const int EEPROMAddressInputMode = 18;   // 1 byte for byte inputMode
 
 //initializes app state from user prefs, if set
 void setupLoadUserPrefs() {
+  EEPROM.begin();
   // Load the last saved values from EEPROM
   EEPROM.get(EEPROMAddressMillis, millisValue);
 #ifdef DEBUG_PRINT
@@ -53,6 +54,7 @@ void setupLoadUserPrefs() {
 
 //updates the user prefs with the current value
 void saveUserPrefs(bool includeUserValues) {
+  EEPROM.begin();
   if (includeUserValues) {
     EEPROM.put(millisValue, EEPROMAddressMillis);
     EEPROM.put(correctionValue, EEPROMAddressCorrection);
@@ -121,4 +123,9 @@ bool closePrefDialog() {
   currentlyHighlightedPrefElement = 3;  // Switch to OK
   displayNeedsUpdate = true;
   return false;
+}
+
+void updateInfo(String newInfo) {
+  info = newInfo;
+  displayNeedsUpdate = true;
 }

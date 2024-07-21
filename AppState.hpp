@@ -78,5 +78,9 @@ const int prefDefaultSelection = 3;
 int currentlyHighlightedPrefElement;
 bool includeUserValues = true;
 
+//Info string, do not set directly!
+String info = "Press button > prefs";
+//Replaces the info text and triggers a redraw
+void updateInfo(String newInfo);
 
 #endif
