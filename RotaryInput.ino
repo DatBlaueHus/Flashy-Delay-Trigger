@@ -95,7 +95,7 @@ void handleMillisInput(int newPos) {
     newPos = 0;
     encoder.setPosition(newPos);
   }
-  if (millisValue != newPos) {
+  if (millisValue != (unsigned)newPos) {
     millisValue = newPos;
     exposureIndex = findNearestExposureIndex(millisValue);
 #ifdef DEBUG_PRINT

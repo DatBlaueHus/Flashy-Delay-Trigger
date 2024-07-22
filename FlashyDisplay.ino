@@ -36,14 +36,14 @@ void baseDisplaySetup() {
 }
 
 // triangle at the left of the box
-void triangleLeft(byte* box, int t = 2) {
+void triangleLeft(const byte* box, int t = 2) {
   display.fillTriangle(box[0], box[1] + box[3] / 2 - t,
                        box[0] + t, box[1] + box[3] / 2,
                        box[0], box[1] + box[3] / 2 + t, SSD1306_WHITE);
 }
 
 // triangle at the right of the box
-void triangleRight(byte* box, int t = 2) {
+void triangleRight(const byte* box, int t = 2) {
   display.fillTriangle(box[0] + box[2] - t -1, box[1] + box[3] / 2,
                     box[0] + box[2]-1, box[1] + box[3] / 2 - t,
                     box[0] + box[2]-1, box[1] + box[3] / 2 + t, SSD1306_WHITE);
@@ -56,27 +56,26 @@ void triangleRight(byte* box, int t = 2) {
 @param highlight: If true, highlight the box
 @note   The text will wrap hardly even within word borders
 */
-void displayText(String text, byte* box, bool highlight = false) {
+void displayText(const String text, const byte* box, const bool highlight = false) {
   fillBox(box);
   if (highlight) {
     triangleLeft(box);
   }
   //Calculate offset
-  int16_t* bounds = textBounds(text);
+  uint16_t size[2];
+  textSize(text, size);
 
-  // int16_t x1, y1, w, h;
-  // display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
-  int offset[2] = { (box[2] - bounds[2]) / 2, (box[3] - bounds[3]) / 2 };
+  int offset[2] = { (int)((box[2] - size[0]) / 2), (int)((box[3] - size[1]) / 2) };
   printText(text, box, offset);
 }
 
-int16_t* textBounds(String text) {
-  static int16_t arr[4];
-  display.getTextBounds(text, 0, 0, arr, arr + 1, arr + 2, arr + 3);
-  return arr;
+uint16_t* textSize(const String text, uint16_t* size) {
+  static int16_t pos[2];
+  display.getTextBounds(text, 0, 0, pos, pos + 1, size, size +1);
+  return size;
 }
 
-void displayRadio(String text, byte* box, bool selected = false, bool highlight = false) {
+void displayRadio(const String text, const byte* box, bool selected = false, bool highlight = false) {
   int offset[2] = { box[3] + 3, 2 };  //TODO: Magic Numbers >:-/
   fillBox(box);
   circle(box, selected);
@@ -86,7 +85,7 @@ void displayRadio(String text, byte* box, bool selected = false, bool highlight 
   }
 }
 
-void displayCheckbox(String text, byte* box, bool selected = false, bool highlight = false) {
+void displayCheckbox(const String text, const byte* box, bool selected = false, bool highlight = false) {
   int offset[2] = { box[3] + 3, 2 };  //TODO: Magic Numbers >:-/
   fillBox(box);
   square(box, selected);
@@ -96,7 +95,7 @@ void displayCheckbox(String text, byte* box, bool selected = false, bool highlig
   }
 }
 
-void displayButton(String text, byte* box, bool highlight = false) {
+void displayButton(const String text, const byte* box, bool highlight = false) {
   displayText(text, box);
   if (highlight) {
     triangleLeft(box);
@@ -106,22 +105,22 @@ void displayButton(String text, byte* box, bool highlight = false) {
 }
 
 //inverts the box
-void invertBox(byte* box) {
+void invertBox(const byte* box) {
   display.fillRect(box[0], box[1], box[2], box[3], SSD1306_INVERSE);
 }
 
 // fills the given box with background color
-void fillBox(byte* box) {
+void fillBox(const byte* box) {
   display.fillRect(box[0], box[1], box[2], box[3], SSD1306_BLACK);
 }
 
 //prints the text with the given offset in the box
-void printText(String text, byte* box, int offset[2]) {
+void printText(String text, const byte* box, const int offset[2]) {
   display.setCursor(box[0] + offset[0], box[1] + offset[1]);
   display.print(text);
 }
 
-void circle(byte* box, bool filled) {
+void circle(const byte* box, const bool filled) {
   int c = box[3] / 2;
   int r = c - 1;  //TODO: Magic Numbers >:-/
   display.drawCircle(box[0] + c, box[1] + c, r, SSD1306_WHITE);
@@ -130,7 +129,7 @@ void circle(byte* box, bool filled) {
   }
 }
 
-void square(byte* box, bool filled) {
+void square(const byte* box, const bool filled) {
   int o = 1;  //TODO: Magic Numbers >:-/
   int d = box[3] - 2 * o;
 
@@ -182,7 +181,7 @@ void settingsScreen() {
 // Shows the splash screen
 void prefsScreen() {
   display.clearDisplay();
-  displayRadio(F("Exposure"), boxes[0], selectedInputUnit == EXPOSURE, currentlyHighlightedPrefElement == 0);
+  displayRadio(F("Exposure"), boxes[0], selectedInputUnit == EXPOSUREVALUE, currentlyHighlightedPrefElement == 0);
   displayRadio(F("ms"), boxes[1], selectedInputUnit == MILLISECONDS, currentlyHighlightedPrefElement == 1);  //
   displayCheckbox(F("Save preset values"), boxes[2], includeUserValues, currentlyHighlightedPrefElement == 2);
   displayButton(F("OK"), boxes[3], currentlyHighlightedPrefElement == 3);

@@ -9,10 +9,10 @@ String formatExposureTime(int index);
 //Formats microseconds as ms with one digit after the point
 String formatCorrectionValue(int value);
 
-long calculateExposureMicroseconds(int index);
+unsigned long calculateExposureMicroseconds(byte index);
 
 //calculates the milliseconds from the current exposure value
-long millisFromExposure();
+unsigned long millisFromExposure();
 
 //calculates nearest exposure for the current value of millis
 int exposureFromMillis();

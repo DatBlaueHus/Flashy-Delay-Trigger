@@ -5,18 +5,18 @@
 
 //Fallback to small screen as soon as DEBUG_PRINT is enabled, because we're so toght on memory that the display doesn't load anymore in bug screen mode
 #ifndef DEBUG_PRINT
-    #define BIGSCREEN //Use display in 128 x 64, if not set, fallback
-#endif
+#define BIGSCREEN  //Use display in 128 x 64, if not set, fallback
+#endif // DEBUG_PRINT
 
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_WIDTH 128  // OLED display width, in pixels
 
 #ifdef BIGSCREEN
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define SCREEN_HEIGHT 64  // OLED display height, in pixels
 #else
-#define SCREEN_HEIGHT 32 // OLED display height, in pixels
-#endif //BIGSCREEN
+#define SCREEN_HEIGHT 32  // OLED display height, in pixels
+#endif                    //BIGSCREEN
 
-#define ROTATE_SCREEN 2 // Screen rotation, 0 normal, 2 = rotated by 180°
+#define ROTATE_SCREEN 2  // Screen rotation, 0 normal, 2 = rotated by 180°
 
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 // The pins for I2C are defined by the Wire-library.
@@ -43,7 +43,7 @@ const byte boxes[nBoxes][4] = {
   { 0, 11, 128, 11 },
   { 0, 22, 128, 10 }
 };
-#endif //BIGSCREEN
+#endif  //BIGSCREEN
 
 
 #endif

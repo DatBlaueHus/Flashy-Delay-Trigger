@@ -11,7 +11,7 @@ String microsAsMillis(long microseconds, int postPoint) {
 
 // Formatters ==================================================================================================
 
-String formatExposureTime(int index) {
+String formatExposureTime(byte index) {
   String changed = millisValue != calculateExposureMicroseconds(exposureIndex) / 1000 ? "\xFA" : "";
   float time = exposureTimes[index];
   if (time >= 1.0) {
@@ -36,12 +36,12 @@ String formatCorrectionValue(int value) {
 
 //Converters ==================================================================================================
 
-long calculateExposureMicroseconds(int index) {
-  return static_cast<long>(exposureTimes[index] * 1000000);
+unsigned long calculateExposureMicroseconds(byte index) {
+  return static_cast<unsigned long>(exposureTimes[index] * 1000000);
 }
 
 //calculates the milliseconds from the current exposure value
-long millisFromExposure() {
+unsigned long millisFromExposure() {
   return calculateExposureMicroseconds(exposureIndex) / 1000;
 }
 
@@ -49,11 +49,11 @@ int exposureFromMillis() {
   return findNearestExposureIndex(millisValue);
 }
 
-int findNearestExposureIndex(long milliseconds) {
+byte findNearestExposureIndex(unsigned long milliseconds) {
   long microseconds = milliseconds * 1000;
-  int nearestIndex = 0;
+  byte nearestIndex = 0;
   long smallestDifference = abs(calculateExposureMicroseconds(0) - microseconds);
-  for (int i = 1; i < exposureCount; i++) {
+  for (byte i = 1; i < exposureCount; i++) {
     long difference = abs(calculateExposureMicroseconds(i) - microseconds);
     if (difference < smallestDifference) {
       smallestDifference = difference;

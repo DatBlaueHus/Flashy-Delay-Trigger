@@ -40,13 +40,13 @@ void setupLoadUserPrefs() {
   Serial.println("Corr. in: " + String());
 #endif
 
-  byte temp;
+  InputUnit temp;
   EEPROM.get(EEPROMAddressInputMode, temp);
-  preferredInputUnit = (temp >= 0 && temp < 2) ? temp : EXPOSUREVALUE;
+  preferredInputUnit = (temp >= EXPOSUREVALUE && temp < MILLISECONDS) ? temp : EXPOSUREVALUE;
 #ifdef DEBUG_PRINT
   Serial.println("inp: " + String(temp) + " > " + String(preferredInputUnit));
 #endif
-  exposureIndex = findNearestExposureIndex(millis);
+  exposureIndex = findNearestExposureIndex(millisValue);
   correctionValue = -200;  //right now EEProm readout is unbounded and often wrong
   refreshCurrentDelayTime();
 }
