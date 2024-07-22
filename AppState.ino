@@ -111,7 +111,7 @@ bool closePrefDialog() {
   Serial.println("currentlyHighlightedPrefElement" + String(currentlyHighlightedPrefElement));
 #endif
   if (currentlyHighlightedPrefElement == 0 || currentlyHighlightedPrefElement == 1) {
-    selectedInputUnit = selectedInputUnit == EXPOSURE ? MILLISECONDS : EXPOSURE;
+    selectedInputUnit = selectedInputUnit ==   EXPOSUREVALUE ? MILLISECONDS : EXPOSUREVALUE;
   } else if (currentlyHighlightedPrefElement == 2) {
     includeUserValues = !includeUserValues;
   } else if (currentlyHighlightedPrefElement == 3) {

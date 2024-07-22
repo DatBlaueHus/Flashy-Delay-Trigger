@@ -8,14 +8,6 @@ bool flashIsOn = false;  // state var to store the flash value
 //Fast settings for analog read!
 #define FASTADC 1
 
-// defines for setting and clearing register bits
-#ifndef cbi
-#define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
-#endif
-#ifndef sbi
-#define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
-#endif
-
 //measured base level
 void setReferenceLevel() {
   int sens = analogRead(FLASHPORT);
@@ -34,20 +26,23 @@ void setReferenceLevel() {
   sensRef = sensMax + 10;  //TODO: Rather go for an activation on the raise versus the previous level
 
 #ifdef DEBUG_PRINT
-  Serial.println("SensRef: " + String(sensRef));
-  Serial.println("sensMin: " + String(sensMin));
-  Serial.println("sensMax: " + String(sensMax));
+  Serial.println("SRef: " + String(sensRef));
+  Serial.println("sMin: " + String(sensMin));
+  Serial.println("sMax: " + String(sensMax));
 #endif
 }
 
 void setupFlashAnalytics() {
-  int x = 0;
-  int sens = 0;
-  int sensMax = 0;
-  int sensMin = 0;
-
 #if FASTADC
   // set prescale to 16 t allow faster sampling
+  // defines for setting and clearing register bits
+  #ifndef cbi
+  #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
+  #endif
+  #ifndef sbi
+  #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
+  #endif
+
   sbi(ADCSRA, ADPS2);
   cbi(ADCSRA, ADPS1);
   cbi(ADCSRA, ADPS0);
@@ -72,7 +67,7 @@ void handleFlashAnalyticsState() {
     if (flashIsOn) {
       unsigned long now = micros();
       flashIsOn = false;
-      if (xOn == 0) {
+      if (xOn == 0 || (flashStartedAt - xOn) > currentDelayTime + 5000) {  //very high delays are usually not triggered
           updateInfo("\xFB for " + String(microsAsMillis(now - flashStartedAt, 3)));
       }
       else {

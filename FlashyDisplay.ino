@@ -5,51 +5,10 @@
 
 #include "AppState.hpp"
 #include "FlashyDisplay.hpp"
+#include "ScreenGeometrics.hpp"
 
-//Fallback to small screen as soon as DEBUG_PRINT is enabled, because we're so toght on memory that the display doesn't load anymore in bug screen mode
-#ifndef DEBUG_PRINT
-    #define BIGSCREEN //Use display in 128 x 64, if not set, fallback
-#endif
-
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-
-#ifdef BIGSCREEN
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-#else
-#define SCREEN_HEIGHT 32 // OLED display height, in pixels
-#endif //BIGSCREEN
-
-#define ROTATE_SCREEN 2 // Screen rotation, 0 normal, 2 = rotated by 180°
-
-// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
-// The pins for I2C are defined by the Wire-library.
-// On an arduino UNO:       A4(SDA), A5(SCL)
-// On an arduino MEGA 2560: 20(SDA), 21(SCL)
-// On an arduino LEONARDO:   2(SDA),  3(SCL), ...
-#define OLED_RESET -1        // Reset pin # (or -1 if sharing Arduino reset pin)
-#define SCREEN_ADDRESS 0x3C  ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
-//The box configuration of the boxes
-const int nBoxes = 4;
-
-#ifdef BIGSCREEN
-const int boxes[nBoxes][4] = {
-  { 0, 0, 64, 16 },
-  { 64, 0, 64, 16 },
-  { 0, 16, 128, 16 },
-  { 0, 32, 128, 16 }
-};
-#else
-const int boxes[nBoxes][4] = {
-  { 0, 0, 64, 11 },
-  { 64, 0, 64, 11 },
-  { 0, 11, 128, 11 },
-  { 0, 22, 128, 10 }
-};
-#endif //BIGSCREEN
-
 
 void setupDisplay() {
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
@@ -77,14 +36,14 @@ void baseDisplaySetup() {
 }
 
 // triangle at the left of the box
-void triangleLeft(int box[4], int t = 2) {
+void triangleLeft(byte* box, int t = 2) {
   display.fillTriangle(box[0], box[1] + box[3] / 2 - t,
                        box[0] + t, box[1] + box[3] / 2,
                        box[0], box[1] + box[3] / 2 + t, SSD1306_WHITE);
 }
 
 // triangle at the right of the box
-void triangleRight(int box[4], int t = 2) {
+void triangleRight(byte* box, int t = 2) {
   display.fillTriangle(box[0] + box[2] - t -1, box[1] + box[3] / 2,
                     box[0] + box[2]-1, box[1] + box[3] / 2 - t,
                     box[0] + box[2]-1, box[1] + box[3] / 2 + t, SSD1306_WHITE);
@@ -97,8 +56,7 @@ void triangleRight(int box[4], int t = 2) {
 @param highlight: If true, highlight the box
 @note   The text will wrap hardly even within word borders
 */
-void displayText(String text, int iBox, bool highlight = false) {
-  int* box = boxes[iBox];
+void displayText(String text, byte* box, bool highlight = false) {
   fillBox(box);
   if (highlight) {
     triangleLeft(box);
@@ -118,8 +76,7 @@ int16_t* textBounds(String text) {
   return arr;
 }
 
-void displayRadio(String text, int iBox, bool selected = false, bool highlight = false) {
-  int* box = boxes[iBox];
+void displayRadio(String text, byte* box, bool selected = false, bool highlight = false) {
   int offset[2] = { box[3] + 3, 2 };  //TODO: Magic Numbers >:-/
   fillBox(box);
   circle(box, selected);
@@ -129,8 +86,7 @@ void displayRadio(String text, int iBox, bool selected = false, bool highlight =
   }
 }
 
-void displayCheckbox(String text, int iBox, bool selected = false, bool highlight = false) {
-  int* box = boxes[iBox];
+void displayCheckbox(String text, byte* box, bool selected = false, bool highlight = false) {
   int offset[2] = { box[3] + 3, 2 };  //TODO: Magic Numbers >:-/
   fillBox(box);
   square(box, selected);
@@ -140,9 +96,8 @@ void displayCheckbox(String text, int iBox, bool selected = false, bool highligh
   }
 }
 
-void displayButton(String text, int iBox, bool highlight = false) {
-  displayText(text, iBox);
-  int* box = boxes[iBox];
+void displayButton(String text, byte* box, bool highlight = false) {
+  displayText(text, box);
   if (highlight) {
     triangleLeft(box);
     triangleRight(box);
@@ -151,22 +106,22 @@ void displayButton(String text, int iBox, bool highlight = false) {
 }
 
 //inverts the box
-void invertBox(int box[4]) {
+void invertBox(byte* box) {
   display.fillRect(box[0], box[1], box[2], box[3], SSD1306_INVERSE);
 }
 
 // fills the given box with background color
-void fillBox(int box[4]) {
+void fillBox(byte* box) {
   display.fillRect(box[0], box[1], box[2], box[3], SSD1306_BLACK);
 }
 
 //prints the text with the given offset in the box
-void printText(String text, int box[4], int offset[2]) {
+void printText(String text, byte* box, int offset[2]) {
   display.setCursor(box[0] + offset[0], box[1] + offset[1]);
   display.print(text);
 }
 
-void circle(int box[4], bool filled) {
+void circle(byte* box, bool filled) {
   int c = box[3] / 2;
   int r = c - 1;  //TODO: Magic Numbers >:-/
   display.drawCircle(box[0] + c, box[1] + c, r, SSD1306_WHITE);
@@ -175,7 +130,7 @@ void circle(int box[4], bool filled) {
   }
 }
 
-void square(int box[4], bool filled) {
+void square(byte* box, bool filled) {
   int o = 1;  //TODO: Magic Numbers >:-/
   int d = box[3] - 2 * o;
 
@@ -213,13 +168,13 @@ void splashScreen() {
 void settingsScreen() {
   display.clearDisplay();
   if (preferredInputUnit == MILLISECONDS) {
-    displayText(String(millisValue) + "ms", 0, currentMode == EXPOSURE);
+    displayText(String(millisValue) + "ms", boxes[0], currentMode == EXPOSURE);
   } else {
-    displayText(formatExposureTime(exposureIndex), 0, currentMode == EXPOSURE);
+    displayText(formatExposureTime(exposureIndex), boxes[0], currentMode == EXPOSURE);
   }
-  displayText(microsAsMillis(correctionValue, 1), 1, currentMode == CORRECTION);
-  displayText(microsAsMillis(currentDelayTime, 1), 2);
-  displayText(info,3);
+  displayText(microsAsMillis(correctionValue, 1), boxes[1], currentMode == CORRECTION);
+  displayText(microsAsMillis(currentDelayTime, 1), boxes[2]);
+  displayText(info, boxes[3]);
   display.display();
   delay(10);
 }
@@ -227,10 +182,10 @@ void settingsScreen() {
 // Shows the splash screen
 void prefsScreen() {
   display.clearDisplay();
-  displayRadio(F("Exposure"), 0, selectedInputUnit == EXPOSURE, currentlyHighlightedPrefElement == 0);
-  displayRadio(F("ms"), 1, selectedInputUnit == MILLISECONDS, currentlyHighlightedPrefElement == 1);  //
-  displayCheckbox(F("Save preset values"), 2, includeUserValues, currentlyHighlightedPrefElement == 2);
-  displayButton(F("OK"), 3, currentlyHighlightedPrefElement == 3);
+  displayRadio(F("Exposure"), boxes[0], selectedInputUnit == EXPOSURE, currentlyHighlightedPrefElement == 0);
+  displayRadio(F("ms"), boxes[1], selectedInputUnit == MILLISECONDS, currentlyHighlightedPrefElement == 1);  //
+  displayCheckbox(F("Save preset values"), boxes[2], includeUserValues, currentlyHighlightedPrefElement == 2);
+  displayButton(F("OK"), boxes[3], currentlyHighlightedPrefElement == 3);
   display.display();
 }
 

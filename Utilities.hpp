@@ -11,7 +11,6 @@ String formatCorrectionValue(int value);
 
 long calculateExposureMicroseconds(int index);
 
-
 //calculates the milliseconds from the current exposure value
 long millisFromExposure();
 
