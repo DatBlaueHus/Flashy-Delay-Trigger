@@ -4,7 +4,6 @@
 #include <Adafruit_SSD1306.h>
 
 #include "AppState.hpp"
-#include "FlashyDisplay.hpp"
 #include "ScreenGeometrics.hpp"
 
 
@@ -183,10 +182,10 @@ void settingsScreen() {
 // Shows the splash screen
 void prefsScreen() {
   display.clearDisplay();
-  displayRadio(F("Expos."), boxes[0], selectedInputUnit == EXPOSUREVALUE, currentlyHighlightedPrefElement == 0);
-  displayRadio(F("ms"), boxes[1], selectedInputUnit == MILLISECONDS, currentlyHighlightedPrefElement == 1);  //
-  displayCheckbox(F("Save current"), boxes[2], includeUserValues, currentlyHighlightedPrefElement == 2);
-  displayButton(F("OK"), boxes[3], currentlyHighlightedPrefElement == 3);
+  displayRadio(F("Expos."), boxes[0], selectedInputUnit == EXPOSUREVALUE, currentlyHighlightedPrefElement == PREF_RADIOGROUP);
+  displayRadio(F("ms"), boxes[1], selectedInputUnit == MILLISECONDS, currentlyHighlightedPrefElement == PREF_RADIOGROUP);  //
+  displayCheckbox(F("Save current"), boxes[2], includeUserValues, currentlyHighlightedPrefElement == PREF_SETDEFAULTS);
+  displayButton(F("OK"), boxes[3], currentlyHighlightedPrefElement == PREF_OK);
   display.display();
 }
 

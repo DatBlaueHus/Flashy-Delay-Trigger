@@ -3,7 +3,7 @@
 #include "AppState.hpp"
 
 void refreshCurrentDelayTime() {
-  currentDelayTime = max(millisValue * 1000 + correctionValue,0);
+  currentDelayTime = max(millisValue * 1000 + correctionValue, 0);
 }
 
 //This sets up Serial only in Debug mode. It's a noop in builds that haven't define DEBUG_PRINT
@@ -28,26 +28,12 @@ void setupLoadUserPrefs() {
   EEPROM.begin();
   // Load the last saved values from EEPROM
   EEPROM.get(EEPROMAddressMillis, millisValue);
-#ifdef DEBUG_PRINT
-  Serial.println("Millis in: " + String(millisValue));
-#endif
-  if (millisValue < 0) { millisValue = 0; }
-#ifdef DEBUG_PRINT
-  Serial.println("Millis corr: " + String(millisValue));
-#endif
+  if (millisValue > 60000) { millisValue = 42; }
   EEPROM.get(EEPROMAddressCorrection, correctionValue);
-#ifdef DEBUG_PRINT
-  Serial.println("Corr. in: " + String());
-#endif
-
-  InputUnit temp;
-  EEPROM.get(EEPROMAddressInputMode, temp);
-  preferredInputUnit = (temp >= EXPOSUREVALUE && temp < MILLISECONDS) ? temp : EXPOSUREVALUE;
-#ifdef DEBUG_PRINT
-  Serial.println("inp: " + String(temp) + " > " + String(preferredInputUnit));
-#endif
+  EEPROM.get(EEPROMAddressInputMode, preferredInputUnit);
+  preferredInputUnit = (preferredInputUnit >= EXPOSUREVALUE && preferredInputUnit < MILLISECONDS) ? preferredInputUnit : EXPOSUREVALUE;
+  selectedInputUnit = preferredInputUnit;
   exposureIndex = findNearestExposureIndex(millisValue);
-  correctionValue = -200;  //right now EEProm readout is unbounded and often wrong
   refreshCurrentDelayTime();
 }
 
@@ -55,10 +41,10 @@ void setupLoadUserPrefs() {
 void saveUserPrefs(bool includeUserValues) {
   EEPROM.begin();
   if (includeUserValues) {
-    EEPROM.put(millisValue, EEPROMAddressMillis);
-    EEPROM.put(correctionValue, EEPROMAddressCorrection);
+    EEPROM.put(EEPROMAddressMillis, millisValue);
+    EEPROM.put(EEPROMAddressCorrection, correctionValue);
   }
-  EEPROM.put(preferredInputUnit, EEPROMAddressInputMode);
+  EEPROM.put(EEPROMAddressInputMode, preferredInputUnit);
 }
 
 // state
@@ -99,7 +85,7 @@ void switchToNextMode() {
 void openPrefsDialog() {
   selectedInputUnit = preferredInputUnit;
   includeUserValues = true;
-  currentlyHighlightedPrefElement = prefDefaultSelection;
+  currentlyHighlightedPrefElement = PREF_OK;
   currentMode = PREFS;
   setEncoderToState();
   displayNeedsUpdate = true;
@@ -110,16 +96,19 @@ bool closePrefDialog() {
 #ifdef DEBUG_PRINT
   Serial.println("currentlyHighlightedPrefElement" + String(currentlyHighlightedPrefElement));
 #endif
-  if (currentlyHighlightedPrefElement == 0 || currentlyHighlightedPrefElement == 1) {
-    selectedInputUnit = selectedInputUnit ==   EXPOSUREVALUE ? MILLISECONDS : EXPOSUREVALUE;
-  } else if (currentlyHighlightedPrefElement == 2) {
+  if (currentlyHighlightedPrefElement == 0) {
+    selectedInputUnit = selectedInputUnit == EXPOSUREVALUE ? MILLISECONDS : EXPOSUREVALUE;
+  } else if (currentlyHighlightedPrefElement == 1) {
     includeUserValues = !includeUserValues;
-  } else if (currentlyHighlightedPrefElement == 3) {
+  } else if (currentlyHighlightedPrefElement == 2) {
     preferredInputUnit = selectedInputUnit;
     saveUserPrefs(includeUserValues);
     return true;
   }
-  currentlyHighlightedPrefElement = 3;  // Switch to OK
+  displayNeedsUpdate = true;
+  delay(200);
+  currentlyHighlightedPrefElement = 2;  // Highlight OK
+  setEncoderToState();
   displayNeedsUpdate = true;
   return false;
 }

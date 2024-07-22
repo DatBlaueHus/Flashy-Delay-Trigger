@@ -2,7 +2,7 @@
 #define AppState
 
 //Comment out to remove all Serial.print statements
-//#define DEBUG_PRINT
+#define DEBUG_PRINT
 
 #define APPNAME F("Flashy Delay Trigger")
 #define VERSION F("Version 0.0.3")
@@ -70,16 +70,25 @@ bool closePrefDialog();
 
 //preference state
 //The highlighted element of the dialog
+
+#define PREF_RADIOGROUP 0
+#define PREF_SETDEFAULTS 1
+#define PREF_OK 2
+const int nPrefElements = 3;
+
 bool handlePrefSelection();
 
 InputUnit selectedInputUnit;
-const int nPrefElements = 4;
-const int prefDefaultSelection = 3;
 int currentlyHighlightedPrefElement;
 bool includeUserValues = true;
 
+bool displayNeedsUpdate; //set this to true to trigger a redraw
+
+
+
+
 //Info string, do not set directly!
-String info = "Press button > prefs";
+String info = "Hold button > prefs";
 //Replaces the info text and triggers a redraw
 void updateInfo(String newInfo);
 

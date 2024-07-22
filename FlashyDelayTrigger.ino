@@ -4,13 +4,12 @@
 #include "XSyncIn.hpp"
 #include "XSyncOut.hpp"
 #include "FlashAnalytics.hpp"
-#include "FlashyDisplay.hpp"
 
 void setup() {
   setupSerialForDebug();
   setupLoadUserPrefs();
-  setupRotaryInput();
   setupDisplay();
+  setupRotaryInput();
   setupFlashAnalytics();
   setupXSyncIn();
   setupXSyncOut();

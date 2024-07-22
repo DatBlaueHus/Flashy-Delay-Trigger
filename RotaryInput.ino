@@ -1,7 +1,6 @@
 #include <RotaryEncoder.h>
 
 #include "AppState.hpp"
-#include "FlashyDisplay.hpp"
 
 #include "Utilities.hpp"
 
