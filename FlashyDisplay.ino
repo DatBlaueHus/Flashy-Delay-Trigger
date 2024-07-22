@@ -12,11 +12,12 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 void setupDisplay() {
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
-  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
 #ifdef DEBUG_PRINT
     Serial.println(F("SSD1306 allocation failed"));
 #endif
-    for (;;);  // Don't proceed, loop forever
+    for (;;)
+      ;  // Don't proceed, loop forever
   }
   baseDisplaySetup();
   currentMode = SPLASH;
@@ -36,17 +37,17 @@ void baseDisplaySetup() {
 }
 
 // triangle at the left of the box
-void triangleLeft(const byte* box, int t = 2) {
-  display.fillTriangle(box[0], box[1] + box[3] / 2 - t,
-                       box[0] + t, box[1] + box[3] / 2,
-                       box[0], box[1] + box[3] / 2 + t, SSD1306_WHITE);
+void triangleLeft(const byte* box) {
+  display.fillTriangle(box[0] + TRIANGLEOFFSET, box[1] + box[3] / 2,
+                       box[0], box[1] + box[3] / 2 - TRIANGLEOFFSET,
+                       box[0], box[1] + box[3] / 2 + TRIANGLEOFFSET, SSD1306_WHITE);
 }
 
 // triangle at the right of the box
-void triangleRight(const byte* box, int t = 2) {
-  display.fillTriangle(box[0] + box[2] - t -1, box[1] + box[3] / 2,
-                    box[0] + box[2]-1, box[1] + box[3] / 2 - t,
-                    box[0] + box[2]-1, box[1] + box[3] / 2 + t, SSD1306_WHITE);
+void triangleRight(const byte* box) {
+  display.fillTriangle(box[0] + box[2] - 1, box[1] + box[3] / 2 - TRIANGLEOFFSET,
+                       box[0] + box[2] - TRIANGLEOFFSET -1, box[1] + box[3] / 2,
+                       box[0] + box[2] - 1, box[1] + box[3] / 2 + TRIANGLEOFFSET, SSD1306_WHITE);
 }
 
 /*!
@@ -71,12 +72,12 @@ void displayText(const String text, const byte* box, const bool highlight = fals
 
 uint16_t* textSize(const String text, uint16_t* size) {
   static int16_t pos[2];
-  display.getTextBounds(text, 0, 0, pos, pos + 1, size, size +1);
+  display.getTextBounds(text, 0, 0, pos, pos + 1, size, size + 1);
   return size;
 }
 
 void displayRadio(const String text, const byte* box, bool selected = false, bool highlight = false) {
-  int offset[2] = { box[3] + 3, 2 };  //TODO: Magic Numbers >:-/
+  int offset[2] = { box[3] + TEXTOFFSETX, TEXTOFFSETY };
   fillBox(box);
   circle(box, selected);
   printText(text, box, offset);
@@ -86,7 +87,7 @@ void displayRadio(const String text, const byte* box, bool selected = false, boo
 }
 
 void displayCheckbox(const String text, const byte* box, bool selected = false, bool highlight = false) {
-  int offset[2] = { box[3] + 3, 2 };  //TODO: Magic Numbers >:-/
+  int offset[2] = { box[3] + TEXTOFFSETX, TEXTOFFSETY };
   fillBox(box);
   square(box, selected);
   printText(text, box, offset);
@@ -122,44 +123,45 @@ void printText(String text, const byte* box, const int offset[2]) {
 
 void circle(const byte* box, const bool filled) {
   int c = box[3] / 2;
-  int r = c - 1;  //TODO: Magic Numbers >:-/
+  int r = c - CIRCLEINSET;
   display.drawCircle(box[0] + c, box[1] + c, r, SSD1306_WHITE);
   if (filled) {
-    display.fillCircle(box[0] + c, box[1] + c, r - 2, SSD1306_WHITE);  //TODO: Magic Numbers >:-/
+    display.fillCircle(box[0] + c, box[1] + c, r - CIRCLEFILLINSET, SSD1306_WHITE);
   }
 }
 
 void square(const byte* box, const bool filled) {
-  int o = 1;  //TODO: Magic Numbers >:-/
-  int d = box[3] - 2 * o;
+  int o = SQUAREINSET;
+  int d = box[3] - 2 * SQUAREINSET;
 
   display.drawRect(box[0] + o, box[1] + o, d, d, SSD1306_WHITE);
   if (filled) {
-    display.fillRect(box[0] + o + 2, box[1] + o + 2, d - 4, d - 4, SSD1306_WHITE);
+    o = SQUAREFILLINSET;
+    d = box[3] - 2 * SQUAREFILLINSET;
+    display.fillRect(box[0] + o, box[1] + o, d, d, SSD1306_WHITE);
   }
 }
-
 
 void splashScreen() {
   int16_t x1, y1;
   uint16_t w, h;
   display.getTextBounds(APPNAME, 0, 0, &x1, &y1, &w, &h);
-  int offsetName = (132 - w) / 2;
+  int offset = (132 - w) / 2;
+  display.setCursor(offset - 1, 5);  // Start at 5/5
+  display.print(APPNAME);
+  display.setCursor(offset + 1, 7);  // Offsete for effect
+  display.print(APPNAME);
+
   display.getTextBounds(VERSION, 0, 0, &x1, &y1, &w, &h);
-  int offsetVersion = (132 - w) / 2;
-  display.setCursor(offsetName - 1, 5);  // Start at 5/5
-  display.print(APPNAME);
-  display.setCursor(offsetName + 1, 7);  // Offsete for effect
-  display.print(APPNAME);
-  display.setCursor(offsetVersion, 24);  // Start at top-left corner
+  offset = (132 - w) / 2;
+  display.setCursor(offset, 24);  // Start at top-left corner
   display.println(VERSION);
   display.display();
   // Add a short delay before starting the scroll
   delay(500);
   if (ROTATE_SCREEN == 0) {
     display.startscrollleft(0, 1);
-  }
-  else {
+  } else {
     display.startscrollright(5, 7);
   }
 }
@@ -181,9 +183,9 @@ void settingsScreen() {
 // Shows the splash screen
 void prefsScreen() {
   display.clearDisplay();
-  displayRadio(F("Exposure"), boxes[0], selectedInputUnit == EXPOSUREVALUE, currentlyHighlightedPrefElement == 0);
+  displayRadio(F("Expos."), boxes[0], selectedInputUnit == EXPOSUREVALUE, currentlyHighlightedPrefElement == 0);
   displayRadio(F("ms"), boxes[1], selectedInputUnit == MILLISECONDS, currentlyHighlightedPrefElement == 1);  //
-  displayCheckbox(F("Save preset values"), boxes[2], includeUserValues, currentlyHighlightedPrefElement == 2);
+  displayCheckbox(F("Save current"), boxes[2], includeUserValues, currentlyHighlightedPrefElement == 2);
   displayButton(F("OK"), boxes[3], currentlyHighlightedPrefElement == 3);
   display.display();
 }
