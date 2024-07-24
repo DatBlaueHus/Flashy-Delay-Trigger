@@ -68,10 +68,10 @@ void handleFlashAnalyticsState() {
       unsigned long now = micros();
       flashIsOn = false;
       if (xOn == 0 || (flashStartedAt - xOn) > currentDelayTime + 5000) {  //very high delays are usually not triggered
-          updateInfo("\xFB for " + String(microsAsMillis(now - flashStartedAt, 3)));
+          updateInfo(("\xFB for " + String(microsAsMillis(now - flashStartedAt, 3))).c_str());
       }
       else {
-          updateInfo(String(microsAsMillis(flashStartedAt - xOn)) + "\xFB for " + String(microsAsMillis(now - flashStartedAt, 3)));
+          updateInfo((String(microsAsMillis(flashStartedAt - xOn)) + "\xFB for " + String(microsAsMillis(now - flashStartedAt, 3))).c_str());
       }
       xOn = 0;
     }

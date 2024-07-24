@@ -143,17 +143,13 @@ void handleSwitchPress() {
 }
 
 void handleShortPress() {
-  if (currentMode == EXPOSURE || currentMode == CORRECTION) {
+  if (currentMode == EXPOSURE || currentMode == CORRECTION || currentMode == SPLASH) {
     switchToNextMode();
   }
   if (currentMode == PREFS) {
     if (closePrefDialog()) {
       switchToNextMode();
     }
-  }
-  if (currentMode == SPLASH) {
-    currentMode = EXPOSURE;
-    displayNeedsUpdate = true;
   }
 }
 

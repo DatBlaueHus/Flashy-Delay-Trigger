@@ -28,7 +28,7 @@ void handleChange() {
     xOff = micros();
     if (reportXSyncTime) {
       unsigned long elapsed = xOff - xOn;
-      updateInfo("x-sync for " + String(microsAsMillis(elapsed, 3)));
+      updateInfo(("x-sync for " + String(microsAsMillis(elapsed, 3))).c_str());
     }
   }
 }

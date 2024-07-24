@@ -1,52 +1,45 @@
-#include <SPI.h>
+#include <U8g2lib.h>
 #include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
 
 #include "AppState.hpp"
 #include "ScreenGeometrics.hpp"
 
+//Font
+//bdfconv -f 1 -m "28-169" -n SwissFoto -o SwissFoto.hpp SwissFoto.bdf
+#include "SwissFoto.hpp"
 
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+//Choose the driver according to memory requirements
+// U8G2_SSD1306_128X64_NONAME_1_HW_I2C display(U8G2_R2, /* reset=*/U8X8_PIN_NONE);  //small buffer
+U8G2_SSD1306_128X64_NONAME_2_HW_I2C display(U8G2_R2, /* reset=*/U8X8_PIN_NONE);  // big buffer
+// U8G2_SSD1306_128X64_NONAME_F_HW_I2C display(U8G2_R2, /* reset=*/U8X8_PIN_NONE);  // Fullscreen
+
+#define I2CCLOCKFREQUENCY 800000  //Reduce if the screen doesn't start
+
+#define U8G2_BLACK 0
+#define U8G2_WHITE 1
+#define U8G2_INVERSE 2
 
 void setupDisplay() {
-  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
-  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
-#ifdef DEBUG_PRINT
-    Serial.println(F("SSD1306 allocation failed"));
-#endif
-    for (;;)
-      ;  // Don't proceed, loop forever
-  }
-  baseDisplaySetup();
+  display.setBusClock(500000);
+  display.begin();
+  display.setFont(SwissFoto);
   currentMode = SPLASH;
+  updateInfo(VERSION, 1, 3);
   displayNeedsUpdate = true;
-}
-
-void baseDisplaySetup() {
-  // Clear the buffer and display it once
-  display.clearDisplay();
-  display.setRotation(ROTATE_SCREEN);
-  display.display();
-  delay(1000);  // Add a delay to stabilize display, depending on your display you might be able to shorten it
-  // Set display configurations
-  display.cp437(true);                  // Use full 256 char 'Code Page 437' font
-  display.setTextSize(1);               // Normal 1:1 pixel scale
-  display.setTextColor(SSD1306_WHITE);  // Draw white text
 }
 
 // triangle at the left of the box
 void triangleLeft(const byte* box) {
-  display.fillTriangle(box[0] + TRIANGLEOFFSET, box[1] + box[3] / 2,
-                       box[0], box[1] + box[3] / 2 - TRIANGLEOFFSET,
-                       box[0], box[1] + box[3] / 2 + TRIANGLEOFFSET, SSD1306_WHITE);
+  display.drawTriangle(box[0], box[1] + box[3] / 2 - TRIANGLEOFFSET,
+                       box[0] + TRIANGLEOFFSET, box[1] + box[3] / 2,
+                       box[0], box[1] + box[3] / 2 + TRIANGLEOFFSET);
 }
 
 // triangle at the right of the box
 void triangleRight(const byte* box) {
-  display.fillTriangle(box[0] + box[2] - 1, box[1] + box[3] / 2 - TRIANGLEOFFSET,
-                       box[0] + box[2] - TRIANGLEOFFSET -1, box[1] + box[3] / 2,
-                       box[0] + box[2] - 1, box[1] + box[3] / 2 + TRIANGLEOFFSET, SSD1306_WHITE);
+  display.drawTriangle(box[0] + box[2], box[1] + box[3] / 2 - TRIANGLEOFFSET,
+                       box[0] + box[2] - TRIANGLEOFFSET, box[1] + box[3] / 2,
+                       box[0] + box[2], box[1] + box[3] / 2 + TRIANGLEOFFSET);
 }
 
 /*!
@@ -56,46 +49,60 @@ void triangleRight(const byte* box) {
 @param highlight: If true, highlight the box
 @note   The text will wrap hardly even within word borders
 */
-void displayText(const String text, const byte* box, const bool highlight = false) {
-  fillBox(box);
-  if (highlight) {
-    triangleLeft(box);
+void displayText(const char* text, const byte* box, const char* symbol = NULL) {
+  if (symbol != NULL) {
+    unsigned int offset[2] = { TEXTDEDAULTOFFSETX, TEXTDEDAULTOFFSETY };
+    printText(symbol, box, offset);
   }
-  //Calculate offset
-  uint16_t size[2];
-  textSize(text, size);
-
-  int offset[2] = { (int)((box[2] - size[0]) / 2), (int)((box[3] - size[1]) / 2) };
+  unsigned int* offset = textOffset(text, box);
   printText(text, box, offset);
 }
 
-uint16_t* textSize(const String text, uint16_t* size) {
-  static int16_t pos[2];
-  display.getTextBounds(text, 0, 0, pos, pos + 1, size, size + 1);
-  return size;
+//calculates the offset to center the text in the box
+unsigned int* textOffset(const char* text, const byte* box) {
+  static unsigned int arr[2];
+  arr[0] = (box[2] - display.getStrWidth(text)) / 2;
+  arr[1] = TEXTDEDAULTOFFSETY;
+  return arr;
 }
 
-void displayRadio(const String text, const byte* box, bool selected = false, bool highlight = false) {
-  int offset[2] = { box[3] + TEXTOFFSETX, TEXTOFFSETY };
-  fillBox(box);
-  circle(box, selected);
-  printText(text, box, offset);
+void printTextWithPrefix(const char* text, const char* prefix, const byte* box) {
+  // Determine the lengths of the prefix and the original string
+  size_t prefixLen = strlen(prefix);
+  size_t testLen = strlen(text);
+
+  // Allocate memory for the new string
+  char* result = (char*)malloc(prefixLen + testLen + 1);  // +1 for the null terminator
+  strcpy(result, prefix);
+  strcat(result, text);
+  unsigned int offset[2] = { TEXTDEDAULTOFFSETX, TEXTDEDAULTOFFSETY };
+  printText(result, box, offset);
+  free(result);  //free the memory!
+}
+
+void displayRadio(const char* text, const byte* box, bool selected = false, bool highlight = false) {
+  if (selected) {
+    printTextWithPrefix(text, "¦", box);
+  } else {
+    printTextWithPrefix(text, "§", box);
+  }
   if (highlight) {
     invertBox(box);
   }
 }
 
-void displayCheckbox(const String text, const byte* box, bool selected = false, bool highlight = false) {
-  int offset[2] = { box[3] + TEXTOFFSETX, TEXTOFFSETY };
-  fillBox(box);
-  square(box, selected);
-  printText(text, box, offset);
+void displayCheckbox(const char* text, const byte* box, bool selected = false, bool highlight = false) {
+  if (selected) {
+    printTextWithPrefix(text, "¤", box);
+  } else {
+    printTextWithPrefix(text, "¥", box);
+  }
   if (highlight) {
     invertBox(box);
   }
 }
 
-void displayButton(const String text, const byte* box, bool highlight = false) {
+void displayButton(const char* text, const byte* box, bool highlight = false) {
   displayText(text, box);
   if (highlight) {
     triangleLeft(box);
@@ -106,26 +113,27 @@ void displayButton(const String text, const byte* box, bool highlight = false) {
 
 //inverts the box
 void invertBox(const byte* box) {
-  display.fillRect(box[0], box[1], box[2], box[3], SSD1306_INVERSE);
+  display.setDrawColor(U8G2_INVERSE);
+  display.drawBox(box[0], box[1], box[2], box[3]);  //drawBox
+  display.setDrawColor(U8G2_WHITE);
 }
 
 // fills the given box with background color
 void fillBox(const byte* box) {
-  display.fillRect(box[0], box[1], box[2], box[3], SSD1306_BLACK);
+  display.drawBox(box[0], box[1], box[2], box[3]);
 }
 
 //prints the text with the given offset in the box
-void printText(String text, const byte* box, const int offset[2]) {
-  display.setCursor(box[0] + offset[0], box[1] + offset[1]);
-  display.print(text);
+void printText(const char* text, const byte* box, const unsigned int* offset) {
+  display.drawUTF8(box[0] + offset[0], box[1] + offset[1], text);
 }
 
 void circle(const byte* box, const bool filled) {
   int c = box[3] / 2;
   int r = c - CIRCLEINSET;
-  display.drawCircle(box[0] + c, box[1] + c, r, SSD1306_WHITE);
+  display.drawCircle(box[0] + c, box[1] + c, r);
   if (filled) {
-    display.fillCircle(box[0] + c, box[1] + c, r - CIRCLEFILLINSET, SSD1306_WHITE);
+    display.drawDisc(box[0] + c, box[1] + c, r - CIRCLEFILLINSET);
   }
 }
 
@@ -133,72 +141,68 @@ void square(const byte* box, const bool filled) {
   int o = SQUAREINSET;
   int d = box[3] - 2 * SQUAREINSET;
 
-  display.drawRect(box[0] + o, box[1] + o, d, d, SSD1306_WHITE);
+  display.drawFrame(box[0] + o, box[1] + o, d, d);
   if (filled) {
     o = SQUAREFILLINSET;
     d = box[3] - 2 * SQUAREFILLINSET;
-    display.fillRect(box[0] + o, box[1] + o, d, d, SSD1306_WHITE);
+    display.drawBox(box[0] + o, box[1] + o, d, d);
   }
 }
 
 void splashScreen() {
-  int16_t x1, y1;
-  uint16_t w, h;
-  display.getTextBounds(APPNAME, 0, 0, &x1, &y1, &w, &h);
-  int offset = (132 - w) / 2;
-  display.setCursor(offset - 1, 5);  // Start at 5/5
-  display.print(APPNAME);
-  display.setCursor(offset + 1, 7);  // Offsete for effect
-  display.print(APPNAME);
-
-  display.getTextBounds(VERSION, 0, 0, &x1, &y1, &w, &h);
-  offset = (132 - w) / 2;
-  display.setCursor(offset, 24);  // Start at top-left corner
-  display.println(VERSION);
-  display.display();
-  // Add a short delay before starting the scroll
-  delay(500);
-  if (ROTATE_SCREEN == 0) {
-    display.startscrollleft(0, 1);
-  } else {
-    display.startscrollright(5, 7);
-  }
+  display.firstPage();
+  int offset = (SCREEN_WIDTH - display.getStrWidth(APPNAME)) / 2;
+  int versionOffset = (SCREEN_WIDTH - display.getStrWidth(info)) / 2;
+  do {                              //page looping
+    display.setCursor(offset, 26); 
+    display.print(APPNAME);
+    display.setCursor(versionOffset, 60);  // Start at top-left corner
+    display.print(info);
+  } while (display.nextPage());
 }
 
+//The main screen to operate in
 void settingsScreen() {
-  display.clearDisplay();
-  if (preferredInputUnit == MILLISECONDS) {
-    displayText(String(millisValue) + "ms", boxes[0], currentMode == EXPOSURE);
-  } else {
-    displayText(formatExposureTime(exposureIndex), boxes[0], currentMode == EXPOSURE);
-  }
-  displayText(microsAsMillis(correctionValue, 1), boxes[1], currentMode == CORRECTION);
-  displayText(microsAsMillis(currentDelayTime, 1), boxes[2]);
-  displayText(info, boxes[3]);
-  display.display();
-  delay(10);
+  //TODO precalculate values, we don't need to recalculate them on each frame!
+  
+  display.firstPage();
+  do {  //page looping
+    if (preferredInputUnit == MILLISECONDS) {
+      displayText((String(millisValue) + "ms").c_str(), boxes[0], currentMode == EXPOSURE ? "¢" : "£");
+    } else {
+      displayText(formatExposureTime(exposureIndex).c_str(), boxes[0], currentMode == EXPOSURE ? "¢" : "£");
+    }
+    displayText(microsAsMillis(correctionValue, 1).c_str(), boxes[1], currentMode == CORRECTION ? "¢" : "£");
+    displayText(microsAsMillis(currentDelayTime, 1).c_str(), boxes[2]);
+    displayText(info, boxes[3]);
+  } while (display.nextPage());
+  // delay(10);
 }
 
 // Shows the splash screen
 void prefsScreen() {
-  display.clearDisplay();
-  displayRadio(F("Expos."), boxes[0], selectedInputUnit == EXPOSUREVALUE, currentlyHighlightedPrefElement == PREF_RADIOGROUP);
-  displayRadio(F("ms"), boxes[1], selectedInputUnit == MILLISECONDS, currentlyHighlightedPrefElement == PREF_RADIOGROUP);  //
-  displayCheckbox(F("Save current"), boxes[2], includeUserValues, currentlyHighlightedPrefElement == PREF_SETDEFAULTS);
-  displayButton(F("OK"), boxes[3], currentlyHighlightedPrefElement == PREF_OK);
-  display.display();
+  display.firstPage();
+  do {  //page looping
+    displayRadio(String("¨").c_str(), boxes[0], selectedInputUnit == EXPOSUREVALUE, currentlyHighlightedPrefElement == PREF_RADIOGROUP);
+    displayRadio("ms", boxes[1], selectedInputUnit == MILLISECONDS, currentlyHighlightedPrefElement == PREF_RADIOGROUP);  //
+    displayCheckbox("Save values [¨ª]", boxes[2], includeUserValues, currentlyHighlightedPrefElement == PREF_SETDEFAULTS);
+    displayButton("OK", boxes[3], currentlyHighlightedPrefElement == PREF_OK);
+  } while (display.nextPage());
 }
 
 void updateDisplay() {
+    //check infocounter
+    //if 
+    
+    
+    
   if (displayNeedsUpdate) {
     displayNeedsUpdate = false;
     if (currentMode == SPLASH) {
       splashScreen();
     } else if (currentMode == PREFS) {
-      display.stopscroll();
       prefsScreen();
     } else {
-      display.stopscroll();
       settingsScreen();
     }
   }
