@@ -4,8 +4,8 @@
 //Comment out to remove all Serial.print statements
 //#define DEBUG_PRINT
 
-#define APPNAME "«" // Flashy Delay Trigger Logo
-#define VERSION "Version 0.0.3 ©"
+#define APPNAME "®" // Flashy Delay Trigger Logo
+#define VERSION "Version 0.0.3   ©" //KB Stamp
 
 // Port configuration =======================================================
 

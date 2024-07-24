@@ -54,18 +54,19 @@ void displayText(const char* text, const byte* box, const char* symbol = NULL) {
     unsigned int offset[2] = { TEXTDEDAULTOFFSETX, TEXTDEDAULTOFFSETY };
     printText(symbol, box, offset);
   }
-  unsigned int* offset = textOffset(text, box);
+  unsigned int* offset = centerOffset(text, box);
   printText(text, box, offset);
 }
 
 //calculates the offset to center the text in the box
-unsigned int* textOffset(const char* text, const byte* box) {
+unsigned int* centerOffset(const char* text, const byte* box) {
   static unsigned int arr[2];
   arr[0] = (box[2] - display.getStrWidth(text)) / 2;
   arr[1] = TEXTDEDAULTOFFSETY;
   return arr;
 }
 
+// prints the text left aligned with standard offset
 void printTextWithPrefix(const char* text, const char* prefix, const byte* box) {
   // Determine the lengths of the prefix and the original string
   size_t prefixLen = strlen(prefix);
@@ -75,7 +76,7 @@ void printTextWithPrefix(const char* text, const char* prefix, const byte* box) 
   char* result = (char*)malloc(prefixLen + testLen + 1);  // +1 for the null terminator
   strcpy(result, prefix);
   strcat(result, text);
-  unsigned int offset[2] = { TEXTDEDAULTOFFSETX, TEXTDEDAULTOFFSETY };
+  static unsigned int offset[2] = { TEXTDEDAULTOFFSETX, TEXTDEDAULTOFFSETY };
   printText(result, box, offset);
   free(result);  //free the memory!
 }
@@ -118,35 +119,9 @@ void invertBox(const byte* box) {
   display.setDrawColor(U8G2_WHITE);
 }
 
-// fills the given box with background color
-void fillBox(const byte* box) {
-  display.drawBox(box[0], box[1], box[2], box[3]);
-}
-
 //prints the text with the given offset in the box
 void printText(const char* text, const byte* box, const unsigned int* offset) {
   display.drawUTF8(box[0] + offset[0], box[1] + offset[1], text);
-}
-
-void circle(const byte* box, const bool filled) {
-  int c = box[3] / 2;
-  int r = c - CIRCLEINSET;
-  display.drawCircle(box[0] + c, box[1] + c, r);
-  if (filled) {
-    display.drawDisc(box[0] + c, box[1] + c, r - CIRCLEFILLINSET);
-  }
-}
-
-void square(const byte* box, const bool filled) {
-  int o = SQUAREINSET;
-  int d = box[3] - 2 * SQUAREINSET;
-
-  display.drawFrame(box[0] + o, box[1] + o, d, d);
-  if (filled) {
-    o = SQUAREFILLINSET;
-    d = box[3] - 2 * SQUAREFILLINSET;
-    display.drawBox(box[0] + o, box[1] + o, d, d);
-  }
 }
 
 void splashScreen() {
@@ -161,10 +136,9 @@ void splashScreen() {
   } while (display.nextPage());
 }
 
-//The main screen to operate in
+//The main setting screen to operate in
 void settingsScreen() {
   //TODO precalculate values, we don't need to recalculate them on each frame!
-  
   display.firstPage();
   do {  //page looping
     if (preferredInputUnit == MILLISECONDS) {
@@ -179,11 +153,11 @@ void settingsScreen() {
   // delay(10);
 }
 
-// Shows the splash screen
+// Shows the preference screen
 void prefsScreen() {
   display.firstPage();
   do {  //page looping
-    displayRadio(String("¨").c_str(), boxes[0], selectedInputUnit == EXPOSUREVALUE, currentlyHighlightedPrefElement == PREF_RADIOGROUP);
+    displayRadio("¨", boxes[0], selectedInputUnit == EXPOSUREVALUE, currentlyHighlightedPrefElement == PREF_RADIOGROUP);
     displayRadio("ms", boxes[1], selectedInputUnit == MILLISECONDS, currentlyHighlightedPrefElement == PREF_RADIOGROUP);  //
     displayCheckbox("Save values [¨ª]", boxes[2], includeUserValues, currentlyHighlightedPrefElement == PREF_SETDEFAULTS);
     displayButton("OK", boxes[3], currentlyHighlightedPrefElement == PREF_OK);
