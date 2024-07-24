@@ -73,8 +73,11 @@ void switchToNextMode() {
 #endif
   if (currentMode == EXPOSURE) {
     currentMode = CORRECTION;
-  } else if (currentMode == CORRECTION || currentMode == PREFS || currentMode == SPLASH) {
-    currentMode = EXPOSURE;
+  } else if (currentMode == CORRECTION || currentMode == PREFS) {
+      currentMode = EXPOSURE;
+  } else if (currentMode == SPLASH) {
+      currentMode = EXPOSURE;
+      updateInfo("Long £ for settings!", 0, 5);
   }
   setEncoderToState();
   displayNeedsUpdate = true;
@@ -85,6 +88,7 @@ void switchToNextMode() {
 void openPrefsDialog() {
   selectedInputUnit = preferredInputUnit;
   includeUserValues = true;
+  updateInfo(NULL);
   currentlyHighlightedPrefElement = PREF_OK;
   currentMode = PREFS;
   setEncoderToState();
@@ -113,7 +117,20 @@ bool closePrefDialog() {
   return false;
 }
 
-void updateInfo(String newInfo) {
-  info = newInfo;
+//Update the Info string, set an optional id to identify the content for follow up, and set an optional display time after which the infoText must be removed or replaced
+void updateInfo(const char* newInfo, byte identifier, byte showSeconds) {
+    // If info was dynamically allocated before, free it
+    if (info != NULL && info != newInfo) {
+        free((void*)info);
+    }
+
+    // Allocate memory and copy newInfo to info
+    info = strdup(newInfo); // strdup allocates memory and copies the string
+    if (info == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+   
+    
   displayNeedsUpdate = true;
 }

@@ -2,10 +2,10 @@
 #define AppState
 
 //Comment out to remove all Serial.print statements
-#define DEBUG_PRINT
+//#define DEBUG_PRINT
 
-#define APPNAME F("Flashy Delay Trigger")
-#define VERSION F("Version 0.0.3")
+#define APPNAME "®" // Flashy Delay Trigger Logo
+#define VERSION "Version 0.0.3   ©" //KB Stamp
 
 // Port configuration =======================================================
 
@@ -84,12 +84,10 @@ bool includeUserValues = true;
 
 bool displayNeedsUpdate; //set this to true to trigger a redraw
 
+//Info string, do not set directly, use the setter to set it!!
+const char* info = NULL;
 
-
-
-//Info string, do not set directly!
-String info = "Hold button > prefs";
 //Replaces the info text and triggers a redraw
-void updateInfo(String newInfo);
+void updateInfo(const char* newInfo, byte identifier = 0, byte showSeconds = 0);
 
-#endif
+#endif // AppState
