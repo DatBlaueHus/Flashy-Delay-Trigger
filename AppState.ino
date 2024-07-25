@@ -107,6 +107,7 @@ bool closePrefDialog() {
   } else if (currentlyHighlightedPrefElement == 2) {
     preferredInputUnit = selectedInputUnit;
     saveUserPrefs(includeUserValues);
+    setEncoderToState();
     return true;
   }
   displayNeedsUpdate = true;

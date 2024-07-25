@@ -39,7 +39,7 @@ enum InputUnit : byte {
 };
 
 InputUnit preferredInputUnit;  // the one that the user has set in the prefs
-unsigned long millisValue = 0;          // Milliseconds value from the user input, can not be negative
+long millisValue = 0;          // Milliseconds value from the user input
 long correctionValue = 0;      // Correction value in microseconds
 void saveUserPrefs();
 

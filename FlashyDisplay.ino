@@ -128,8 +128,8 @@ void splashScreen() {
   display.firstPage();
   int offset = (SCREEN_WIDTH - display.getStrWidth(APPNAME)) / 2;
   int versionOffset = (SCREEN_WIDTH - display.getStrWidth(info)) / 2;
-  do {                              //page looping
-    display.setCursor(offset, 26); 
+  do {  //page looping
+    display.setCursor(offset, 26);
     display.print(APPNAME);
     display.setCursor(versionOffset, 60);  // Start at top-left corner
     display.print(info);
@@ -138,19 +138,26 @@ void splashScreen() {
 
 //The main setting screen to operate in
 void settingsScreen() {
-  //TODO precalculate values, we don't need to recalculate them on each frame!
+  // strdup allocates memory!
+  const char* exposure = preferredInputUnit == MILLISECONDS ? strdup(formatMilliseconds(millisValue).c_str()) :  strdup(formatExposureTime(exposureIndex).c_str());
+  const char* correction = strdup(microsAsMillis(correctionValue, 1).c_str());
+  const char* totalDelay = strdup(microsAsMillis(currentDelayTime, 1).c_str());
+  #ifdef DEBUG_PRINT
+  Serial.println("totalDelay"+String(totalDelay)+" currentDelayTime:"+String(currentDelayTime));
+  #endif
+
   display.firstPage();
   do {  //page looping
-    if (preferredInputUnit == MILLISECONDS) {
-      displayText((String(millisValue) + "ms").c_str(), boxes[0], currentMode == EXPOSURE ? "¢" : "£");
-    } else {
-      displayText(formatExposureTime(exposureIndex).c_str(), boxes[0], currentMode == EXPOSURE ? "¢" : "£");
-    }
-    displayText(microsAsMillis(correctionValue, 1).c_str(), boxes[1], currentMode == CORRECTION ? "¢" : "£");
-    displayText(microsAsMillis(currentDelayTime, 1).c_str(), boxes[2]);
+    displayText(exposure, boxes[0], currentMode == EXPOSURE ? "¢" : "£");
+    displayText(correction, boxes[1], currentMode == CORRECTION ? "¢" : "£");
+    displayText(totalDelay, boxes[2]);
     displayText(info, boxes[3]);
   } while (display.nextPage());
   // delay(10);
+
+  free((void*)exposure);
+  free((void*)correction);
+  free((void*)totalDelay);
 }
 
 // Shows the preference screen
@@ -165,11 +172,11 @@ void prefsScreen() {
 }
 
 void updateDisplay() {
-    //check infocounter
-    //if 
-    
-    
-    
+  //check infocounter
+  //if
+
+
+
   if (displayNeedsUpdate) {
     displayNeedsUpdate = false;
     if (currentMode == SPLASH) {
