@@ -142,9 +142,6 @@ void settingsScreen() {
   const char* exposure = preferredInputUnit == MILLISECONDS ? strdup(formatMilliseconds(millisValue).c_str()) :  strdup(formatExposureTime(exposureIndex).c_str());
   const char* correction = strdup(microsAsMillis(correctionValue, 1).c_str());
   const char* totalDelay = strdup(microsAsMillis(currentDelayTime, 1).c_str());
-  #ifdef DEBUG_PRINT
-  Serial.println("totalDelay"+String(totalDelay)+" currentDelayTime:"+String(currentDelayTime));
-  #endif
 
   display.firstPage();
   do {  //page looping

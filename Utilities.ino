@@ -3,9 +3,6 @@
 // Prints microseconds as ms, with a leading comment and postPoint digits after the decimal. Adds a linebreak
 String microsAsMillis(long microseconds, int postPoint) {
   String res = String(microseconds / 1000.0, postPoint) + " ms";
-  #ifdef DEBUG_PRINT
-  Serial.println(res);
-  #endif
   return res;
 }
 
@@ -17,7 +14,7 @@ String formatMilliseconds(long millis) {
 
 
 String formatExposureTime(byte index) {
-  String changed = millisValue != calculateExposureMicroseconds(exposureIndex) / 1000 ? "\xFA" : "";
+  String changed = millisValue != calculateExposureMicroseconds(exposureIndex) / 1000 ? "~" : "";
   float time = exposureTimes[index];
   if (time >= 1.0) {
     return changed + String(time, 0) + "\"";

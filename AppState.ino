@@ -102,8 +102,6 @@ bool closePrefDialog() {
     preferredInputUnit = selectedInputUnit;
     saveUserPrefs(includeUserValues);
     selectedInputUnit = preferredInputUnit;
-    exposureIndex = findNearestExposureIndex(millisValue);
-    refreshCurrentDelayTime();
     setEncoderToState();
     return true;
   }

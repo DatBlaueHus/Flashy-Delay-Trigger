@@ -11,7 +11,6 @@ const unsigned long longPressDelay = 500;
 const unsigned long debounceDelay = 10;  // the debounce time in ms; increase if the output flickers
 unsigned long lastDebounceTime = 0;      // the last time the output was toggled
 
-
 void setupRotaryInput() {
 
   // Pullup the 3 ports
@@ -102,9 +101,6 @@ void handleCorrectionInput(int newPos) {
   int newCorrection = newPos * 100;
   if (correctionValue != newCorrection) {
     correctionValue = newCorrection;
-#ifdef DEBUG_PRINT
-    Serial.println(correctionValue);
-#endif
     refreshCurrentDelayTime();
     displayNeedsUpdate = true;
   }
