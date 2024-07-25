@@ -30,8 +30,9 @@ void setupLoadUserPrefs() {
   EEPROM.get(EEPROMAddressMillis, millisValue);
   if (millisValue > 60000) { millisValue = 42; }
   EEPROM.get(EEPROMAddressCorrection, correctionValue);
-  EEPROM.get(EEPROMAddressInputMode, preferredInputUnit);
-  preferredInputUnit = (preferredInputUnit >= EXPOSUREVALUE && preferredInputUnit < MILLISECONDS) ? preferredInputUnit : EXPOSUREVALUE;
+  preferredInputUnit = EEPROM.read(EEPROMAddressInputMode);
+  preferredInputUnit = (preferredInputUnit >= EXPOSUREVALUE && preferredInputUnit <= MILLISECONDS) ? preferredInputUnit : EXPOSUREVALUE;
+    Serial.println("Corrected: preferredInputUnit "+String(preferredInputUnit));
   selectedInputUnit = preferredInputUnit;
   exposureIndex = findNearestExposureIndex(millisValue);
   refreshCurrentDelayTime();
@@ -44,7 +45,7 @@ void saveUserPrefs(bool includeUserValues) {
     EEPROM.put(EEPROMAddressMillis, millisValue);
     EEPROM.put(EEPROMAddressCorrection, correctionValue);
   }
-  EEPROM.put(EEPROMAddressInputMode, preferredInputUnit);
+  EEPROM.write(EEPROMAddressInputMode, preferredInputUnit);
 }
 
 // state
