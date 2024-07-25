@@ -80,10 +80,6 @@ void handleExposureInput(int newPos) {
   if (newPos != exposureIndex) {
     exposureIndex = newPos;
     millisValue = millisFromExposure();
-#ifdef DEBUG_PRINT
-    Serial.println(millisValue);
-#endif
-
     refreshCurrentDelayTime();
     displayNeedsUpdate = true;
   }
@@ -97,9 +93,6 @@ void handleMillisInput(int newPos) {
   if (millisValue != (unsigned)newPos) {
     millisValue = newPos;
     exposureIndex = findNearestExposureIndex(millisValue);
-#ifdef DEBUG_PRINT
-    Serial.println(millisValue);
-#endif
     refreshCurrentDelayTime();
     displayNeedsUpdate = true;
   }

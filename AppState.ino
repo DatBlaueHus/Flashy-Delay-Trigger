@@ -30,9 +30,8 @@ void setupLoadUserPrefs() {
   EEPROM.get(EEPROMAddressMillis, millisValue);
   if (millisValue > 60000) { millisValue = 42; }
   EEPROM.get(EEPROMAddressCorrection, correctionValue);
-  preferredInputUnit = EEPROM.read(EEPROMAddressInputMode);
+  preferredInputUnit = (InputUnit)EEPROM.read(EEPROMAddressInputMode);
   preferredInputUnit = (preferredInputUnit >= EXPOSUREVALUE && preferredInputUnit <= MILLISECONDS) ? preferredInputUnit : EXPOSUREVALUE;
-    Serial.println("Corrected: preferredInputUnit "+String(preferredInputUnit));
   selectedInputUnit = preferredInputUnit;
   exposureIndex = findNearestExposureIndex(millisValue);
   refreshCurrentDelayTime();
@@ -69,9 +68,6 @@ void setEncoderToState() {
 
 //switches to next screen
 void switchToNextMode() {
-#ifdef DEBUG_PRINT
-  Serial.println(F("switchMode"));
-#endif
   if (currentMode == EXPOSURE) {
     currentMode = CORRECTION;
   } else if (currentMode == CORRECTION || currentMode == PREFS) {
@@ -98,9 +94,6 @@ void openPrefsDialog() {
 
 //returns true if the dialog has handled the selection, or false if
 bool closePrefDialog() {
-#ifdef DEBUG_PRINT
-  Serial.println("currentlyHighlightedPrefElement" + String(currentlyHighlightedPrefElement));
-#endif
   if (currentlyHighlightedPrefElement == 0) {
     selectedInputUnit = selectedInputUnit == EXPOSUREVALUE ? MILLISECONDS : EXPOSUREVALUE;
   } else if (currentlyHighlightedPrefElement == 1) {
@@ -108,6 +101,9 @@ bool closePrefDialog() {
   } else if (currentlyHighlightedPrefElement == 2) {
     preferredInputUnit = selectedInputUnit;
     saveUserPrefs(includeUserValues);
+    selectedInputUnit = preferredInputUnit;
+    exposureIndex = findNearestExposureIndex(millisValue);
+    refreshCurrentDelayTime();
     setEncoderToState();
     return true;
   }
