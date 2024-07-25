@@ -3,15 +3,16 @@
 
 #include "AppState.hpp"
 #include "ScreenGeometrics.hpp"
+#include "Utilities.hpp"
 
 //Font
-//bdfconv -f 1 -m "28-169" -n SwissFoto -o SwissFoto.hpp SwissFoto.bdf
+//bdfconv -f 1 -m "28-255" -n SwissFoto -o SwissFoto.hpp SwissFoto.bdf
 #include "SwissFoto.hpp"
 
 //Choose the driver according to memory requirements
-// U8G2_SSD1306_128X64_NONAME_1_HW_I2C display(U8G2_R2, /* reset=*/U8X8_PIN_NONE);  //small buffer
+//U8G2_SSD1306_128X64_NONAME_1_HW_I2C display(U8G2_R2, /* reset=*/U8X8_PIN_NONE);  //small buffer
 U8G2_SSD1306_128X64_NONAME_2_HW_I2C display(U8G2_R2, /* reset=*/U8X8_PIN_NONE);  // big buffer
-// U8G2_SSD1306_128X64_NONAME_F_HW_I2C display(U8G2_R2, /* reset=*/U8X8_PIN_NONE);  // Fullscreen
+//U8G2_SSD1306_128X64_NONAME_F_HW_I2C display(U8G2_R2, /* reset=*/U8X8_PIN_NONE);  // Fullscreen
 
 #define I2CCLOCKFREQUENCY 800000  //Reduce if the screen doesn't start
 
@@ -24,22 +25,12 @@ void setupDisplay() {
   display.begin();
   display.setFont(SwissFoto);
   currentMode = SPLASH;
-  updateInfo(VERSION, 1, 3);
+  char version[] = VERSION;
+  transformString(version);
+  char formattedString[50];
+  snprintf(formattedString, sizeof(formattedString), VERSIONTEMPLATE, version);
+  updateInfo(formattedString, PRIMARY_SPLASH_INFO_ID, 3);
   displayNeedsUpdate = true;
-}
-
-// triangle at the left of the box
-void triangleLeft(const byte* box) {
-  display.drawTriangle(box[0], box[1] + box[3] / 2 - TRIANGLEOFFSET,
-                       box[0] + TRIANGLEOFFSET, box[1] + box[3] / 2,
-                       box[0], box[1] + box[3] / 2 + TRIANGLEOFFSET);
-}
-
-// triangle at the right of the box
-void triangleRight(const byte* box) {
-  display.drawTriangle(box[0] + box[2], box[1] + box[3] / 2 - TRIANGLEOFFSET,
-                       box[0] + box[2] - TRIANGLEOFFSET, box[1] + box[3] / 2,
-                       box[0] + box[2], box[1] + box[3] / 2 + TRIANGLEOFFSET);
 }
 
 /*!
@@ -81,35 +72,26 @@ void printTextWithPrefix(const char* text, const char* prefix, const byte* box) 
   free(result);  //free the memory!
 }
 
-void displayRadio(const char* text, const byte* box, bool selected = false, bool highlight = false) {
+void displayRadio(const char* text, const byte* box, bool selected = false) {
   if (selected) {
     printTextWithPrefix(text, "¦", box);
   } else {
     printTextWithPrefix(text, "§", box);
   }
-  if (highlight) {
-    invertBox(box);
-  }
 }
 
-void displayCheckbox(const char* text, const byte* box, bool selected = false, bool highlight = false) {
+void displayCheckbox(const char* text, const byte* box, bool selected = false) {
   if (selected) {
     printTextWithPrefix(text, "¤", box);
   } else {
     printTextWithPrefix(text, "¥", box);
   }
-  if (highlight) {
-    invertBox(box);
-  }
 }
 
-void displayButton(const char* text, const byte* box, bool highlight = false) {
-  displayText(text, box);
-  if (highlight) {
-    triangleLeft(box);
-    triangleRight(box);
-    invertBox(box);
-  }
+void displayButton(const char* text, const byte* box) {
+    unsigned int* offset = centerOffset(text, box);
+    offset[1] = offset[1] - 2;
+    printText(text, box, offset);
 }
 
 //inverts the box
@@ -160,20 +142,42 @@ void settingsScreen() {
 // Shows the preference screen
 void prefsScreen() {
   display.firstPage();
+  
+  String presetDisplay;
+  if (selectedInputUnit == EXPOSUREVALUE) {
+      presetDisplay = "Preset " + formatSmallExposureTime(exposureIndex) + "ª";
+  }
+  else {
+      presetDisplay = "Preset " + formatMilliseconds(millisValue) + "ª";
+  }
   do {  //page looping
-    displayRadio("¨", boxes[0], selectedInputUnit == EXPOSUREVALUE, currentlyHighlightedPrefElement == PREF_RADIOGROUP);
-    displayRadio("ms", boxes[1], selectedInputUnit == MILLISECONDS, currentlyHighlightedPrefElement == PREF_RADIOGROUP);  //
-    displayCheckbox("Save values [¨ª]", boxes[2], includeUserValues, currentlyHighlightedPrefElement == PREF_SETDEFAULTS);
-    displayButton("OK", boxes[3], currentlyHighlightedPrefElement == PREF_OK);
+    displayRadio("¨", boxes[0], selectedInputUnit == EXPOSUREVALUE);
+    displayRadio("ms", boxes[1], selectedInputUnit == MILLISECONDS);  //
+    displayCheckbox(presetDisplay.c_str(), boxes[2], includeUserValues);
+    if (currentlyHighlightedPrefElement == PREF_OK) {
+        displayButton("«   OK   ¬", boxes[3]);
+    }
+    else {
+        displayButton("«     OK     ¬", boxes[3]);
+    }
+    handlePrefHighlight();
   } while (display.nextPage());
 }
 
+void handlePrefHighlight() {
+    //Handle Highlight
+    if (currentlyHighlightedPrefElement == PREF_RADIOGROUP) {
+        invertBox(boxes[0]);
+        invertBox(boxes[1]);
+    }
+    else if (currentlyHighlightedPrefElement == PREF_SETDEFAULTS) {
+        invertBox(boxes[2]);
+    } else if (currentlyHighlightedPrefElement == PREF_OK) {
+        invertBox(boxes[3]);
+    }
+}
+
 void updateDisplay() {
-  //check infocounter
-  //if
-
-
-
   if (displayNeedsUpdate) {
     displayNeedsUpdate = false;
     if (currentMode == SPLASH) {

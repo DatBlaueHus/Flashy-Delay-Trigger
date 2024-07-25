@@ -5,7 +5,8 @@
 //#define DEBUG_PRINT
 
 #define APPNAME "®" // Flashy Delay Trigger Logo
-#define VERSION "Version 0.0.3   ©" //KB Stamp
+#define VERSIONTEMPLATE "¯%s   ©" //version + KB Stamp
+#define VERSION "1.0.0"
 
 // Port configuration =======================================================
 
@@ -70,10 +71,10 @@ bool closePrefDialog();
 
 //preference state
 //The highlighted element of the dialog
-
 #define PREF_RADIOGROUP 0
 #define PREF_SETDEFAULTS 1
 #define PREF_OK 2
+
 const int nPrefElements = 3;
 
 bool handlePrefSelection();
@@ -87,7 +88,15 @@ bool displayNeedsUpdate; //set this to true to trigger a redraw
 //Info string, do not set directly, use the setter to set it!!
 const char* info = NULL;
 
+#define PRIMARY_SPLASH_INFO_ID 1
+
+#define SECONDARY_SPLASH_INFO_ID 2
+#define SECONDARY_SPLASH_INFO "¢ or ¡ button to start!"
+
 //Replaces the info text and triggers a redraw
 void updateInfo(const char* newInfo, byte identifier = 0, byte showSeconds = 0);
+
+//Handles business logic for automatic updates of the infor screens
+void checkForInfoUpdate();
 
 #endif // AppState

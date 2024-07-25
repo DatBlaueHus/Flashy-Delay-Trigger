@@ -47,8 +47,6 @@ void saveUserPrefs(bool includeUserValues) {
   EEPROM.write(EEPROMAddressInputMode, preferredInputUnit);
 }
 
-// state
-
 //takes care that encoder is in line with the current input channel
 void setEncoderToState() {
   if (encoderSetterXallback == NULL) { return; }
@@ -113,12 +111,22 @@ bool closePrefDialog() {
   return false;
 }
 
-//Update the Info string, set an optional id to identify the content for follow up, and set an optional display time after which the infoText must be removed or replaced
-void updateInfo(const char* newInfo, byte identifier, byte showSeconds) {
-    // If info was dynamically allocated before, free it
-    if (info != NULL && info != newInfo) {
-        free((void*)info);
-    }
+// Info Update ==========================
+
+// state
+unsigned long infoShownAt = 0; // the starting time of the current info shown, 0 if there should be no info switching
+byte infoID; //the identifier of the currently shown information, only relevant if there are rules for the next information to show
+byte infoDuration;
+
+//Update the Info string, set , and set an optional display time after which the infoText must be removed or replaced
+/*!
+@brief  A simple text centered text output in the given box
+@param newInfo: The text to display
+@param identifier: an optional id to identify the content for follow up, 0 by default
+@param displayDuration: The times in seconds to show the infom or zero if the info should be diplayed until something newcomes up. After the given time the next info is shown or the info is removed
+*/
+void updateInfo(const char* newInfo, byte identifier, byte displayDuration) {
+    free((void*)info); // If info was dynamically allocated before, free it
 
     // Allocate memory and copy newInfo to info
     info = strdup(newInfo); // strdup allocates memory and copies the string
@@ -126,7 +134,29 @@ void updateInfo(const char* newInfo, byte identifier, byte showSeconds) {
         fprintf(stderr, "Memory allocation failed\n");
         exit(1);
     }
-   
-    
   displayNeedsUpdate = true;
+  infoID = identifier;
+  infoDuration = displayDuration;
+  if (infoDuration != 0) {
+      infoShownAt = millis();
+  }
+}
+
+//Checks for automatic Info Updates, i.e. an informataion which should be hidden or replaced by a followup 
+void checkForInfoUpdate() {
+    if (infoDuration == 0) { return; }
+     unsigned long now = millis();
+    unsigned long interval = now - infoShownAt;
+    
+    if (interval > (unsigned long)infoDuration * 1000) {
+        if (infoID == 0) {
+            updateInfo("");
+        }
+        else if (infoID == PRIMARY_SPLASH_INFO_ID) {
+            updateInfo(SECONDARY_SPLASH_INFO, SECONDARY_SPLASH_INFO_ID, 10);
+        }
+        else if (infoID == SECONDARY_SPLASH_INFO_ID) {
+            updateInfo("¼", 0, 0);
+        }
+    }
 }

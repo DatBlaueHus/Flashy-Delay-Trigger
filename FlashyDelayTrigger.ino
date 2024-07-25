@@ -20,6 +20,7 @@ void loop() {
     xSyncTriggered = false;
     fireDelayedTrigger();
   }
+  checkForInfoUpdate();
   handleXTriggerState();
   handleFlashAnalyticsState();
   handleRotaryDelay();

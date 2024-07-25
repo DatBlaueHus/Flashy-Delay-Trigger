@@ -8,10 +8,40 @@ String microsAsMillis(long microseconds, int postPoint) {
 
 // Formatters ==================================================================================================
 
-String formatMilliseconds(long millis) {
-    return String(millis)+" ms";
+//transforms the string by 130 to get to special our small numbers
+void transformString(char *str) {
+  while (*str) {
+    *str = *str + 130;  // Transform '.' to '°' assuming Latin-1 Supplement
+    str++;
+  }
 }
 
+String formatMilliseconds(long millis) {
+  return String(millis) + " ms";
+}
+
+//Create the small version of the exposure time for the preset screen
+String formatSmallExposureTime(byte index) {
+  float time = exposureTimes[index];
+  if (time >= 1.0) {
+    return String(time, 0) + "\"";
+  } else {
+    float denominator = 1.0 / time;
+    int roundedDenominator = (int)(denominator + 0.5);  // Properly round the denominator
+    // Check if the rounded denominator is close enough to the actual denominator
+    String rawString;
+    if (abs(denominator - roundedDenominator) > 0.01) {
+      rawString = String(denominator, 1);
+    } else {
+      rawString = String(roundedDenominator);
+    }
+    char cStr[rawString.length() + 1];          // Create a buffer for the C-string
+    rawString.toCharArray(cStr, sizeof(cStr));  // Convert String to C-string
+    transformString(cStr);
+    rawString = String(cStr);
+    return "±" + rawString;
+  }
+}
 
 String formatExposureTime(byte index) {
   String changed = millisValue != calculateExposureMicroseconds(exposureIndex) / 1000 ? "~" : "";
