@@ -2,7 +2,7 @@
 
 // Prints microseconds as ms, with a leading comment and postPoint digits after the decimal. Adds a linebreak
 String microsAsMillis(long microseconds, int postPoint) {
-  String res = String(microseconds / 1000.0, postPoint) + " ms";
+  String res = String(microseconds / 1000.0, postPoint) + "¿"; //¿ = ms in my custom font
   return res;
 }
 
@@ -17,7 +17,7 @@ void transformString(char *str) {
 }
 
 String formatMilliseconds(long millis) {
-  return String(millis) + " ms";
+  return String(millis) + "¿"; // ¿ = ms in my custom font
 }
 
 //Create the small version of the exposure time for the preset screen

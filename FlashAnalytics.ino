@@ -62,16 +62,15 @@ void handleFlashAnalyticsState() {
       flashStartedAt = micros();  // save timestamp for beginning of flash
       flashIsOn = true;
     }
-    //TODO: If the sensor get's activated for more than 5 seconds, recalibrate!
   } else {
     if (flashIsOn) {
       unsigned long now = micros();
       flashIsOn = false;
-      if (xOn == 0 || (flashStartedAt - xOn) > currentDelayTime + 5000) {  //very high delays are usually not triggered
-          updateInfo(("\xFB for " + String(microsAsMillis(now - flashStartedAt, 3))).c_str());
+      if (xOn == 0 || (flashStartedAt - xOn) > currentDelayTime + 5000) {  //very high delays are usually not triggered but artefacts
+          updateInfo(("½" + String(microsAsMillis(now - flashStartedAt, 3))).c_str());
       }
       else {
-          updateInfo((String(microsAsMillis(flashStartedAt - xOn)) + "\xFB for " + String(microsAsMillis(now - flashStartedAt, 3))).c_str());
+          updateInfo(("¾À" +  String(microsAsMillis(flashStartedAt - xOn)) + "Á½" + String(microsAsMillis(now - flashStartedAt, 3))).c_str());
       }
       xOn = 0;
     }

@@ -14,22 +14,25 @@
 U8G2_SSD1306_128X64_NONAME_2_HW_I2C display(U8G2_R2, /* reset=*/U8X8_PIN_NONE);  // big buffer
 //U8G2_SSD1306_128X64_NONAME_F_HW_I2C display(U8G2_R2, /* reset=*/U8X8_PIN_NONE);  // Fullscreen
 
-#define I2CCLOCKFREQUENCY 800000  //Reduce if the screen doesn't start
+#define I2CCLOCKFREQUENCY 500000  //Reduce if the screen doesn't start
 
 #define U8G2_BLACK 0
 #define U8G2_WHITE 1
 #define U8G2_INVERSE 2
 
+static unsigned int defaultOffset[2] = { 0, TEXTDEDAULTOFFSETY };
+
 void setupDisplay() {
-  display.setBusClock(500000);
   display.begin();
+  display.setBusClock(I2CCLOCKFREQUENCY);
+  display.enableUTF8Print();
   display.setFont(SwissFoto);
   currentMode = SPLASH;
   char version[] = VERSION;
   transformString(version);
   char formattedString[50];
   snprintf(formattedString, sizeof(formattedString), VERSIONTEMPLATE, version);
-  updateInfo(formattedString, PRIMARY_SPLASH_INFO_ID, 3);
+  updateInfo(formattedString, PRIMARY_SPLASH_INFO_ID, 5);
   displayNeedsUpdate = true;
 }
 
@@ -42,8 +45,7 @@ void setupDisplay() {
 */
 void displayText(const char* text, const byte* box, const char* symbol = NULL) {
   if (symbol != NULL) {
-    unsigned int offset[2] = { TEXTDEDAULTOFFSETX, TEXTDEDAULTOFFSETY };
-    printText(symbol, box, offset);
+    printText(symbol, box, defaultOffset);
   }
   unsigned int* offset = centerOffset(text, box);
   printText(text, box, offset);
@@ -52,8 +54,11 @@ void displayText(const char* text, const byte* box, const char* symbol = NULL) {
 //calculates the offset to center the text in the box
 unsigned int* centerOffset(const char* text, const byte* box) {
   static unsigned int arr[2];
-  arr[0] = (box[2] - display.getStrWidth(text)) / 2;
+  arr[0] = (box[2] - display.getUTF8Width(text)) / 2;
   arr[1] = TEXTDEDAULTOFFSETY;
+  #ifdef DEBUG_PRINT
+    Serial.println();
+  #endif
   return arr;
 }
 
@@ -67,7 +72,7 @@ void printTextWithPrefix(const char* text, const char* prefix, const byte* box) 
   char* result = (char*)malloc(prefixLen + testLen + 1);  // +1 for the null terminator
   strcpy(result, prefix);
   strcat(result, text);
-  static unsigned int offset[2] = { TEXTDEDAULTOFFSETX, TEXTDEDAULTOFFSETY };
+  static unsigned int offset[2] = { PREFIXOFFSETX, PREFIXOFFSETY };
   printText(result, box, offset);
   free(result);  //free the memory!
 }
@@ -89,9 +94,9 @@ void displayCheckbox(const char* text, const byte* box, bool selected = false) {
 }
 
 void displayButton(const char* text, const byte* box) {
-    unsigned int* offset = centerOffset(text, box);
-    offset[1] = offset[1] - 2;
-    printText(text, box, offset);
+  unsigned int* offset = centerOffset(text, box);
+  offset[1] = PREFIXOFFSETY;
+  printText(text, box, offset);
 }
 
 //inverts the box
@@ -107,21 +112,21 @@ void printText(const char* text, const byte* box, const unsigned int* offset) {
 }
 
 void splashScreen() {
+  unsigned int offset = (SCREEN_WIDTH - display.getStrWidth(APPNAME)) / 2;
+  unsigned int versionOffset = (SCREEN_WIDTH - display.getUTF8Width(info)) / 2;
   display.firstPage();
-  int offset = (SCREEN_WIDTH - display.getStrWidth(APPNAME)) / 2;
-  int versionOffset = (SCREEN_WIDTH - display.getStrWidth(info)) / 2;
   do {  //page looping
-    display.setCursor(offset, 26);
-    display.print(APPNAME);
+    display.drawUTF8(offset, 26, APPNAME);
     display.setCursor(versionOffset, 60);  // Start at top-left corner
     display.print(info);
+    //      display.drawUTF8(versionOffset, 60, info);
   } while (display.nextPage());
 }
 
 //The main setting screen to operate in
 void settingsScreen() {
   // strdup allocates memory!
-  const char* exposure = preferredInputUnit == MILLISECONDS ? strdup(formatMilliseconds(millisValue).c_str()) :  strdup(formatExposureTime(exposureIndex).c_str());
+  const char* exposure = preferredInputUnit == MILLISECONDS ? strdup(formatMilliseconds(millisValue).c_str()) : strdup(formatExposureTime(exposureIndex).c_str());
   const char* correction = strdup(microsAsMillis(correctionValue, 1).c_str());
   const char* totalDelay = strdup(microsAsMillis(currentDelayTime, 1).c_str());
 
@@ -130,7 +135,7 @@ void settingsScreen() {
     displayText(exposure, boxes[0], currentMode == EXPOSURE ? "¢" : "£");
     displayText(correction, boxes[1], currentMode == CORRECTION ? "¢" : "£");
     displayText(totalDelay, boxes[2]);
-    displayText(info, boxes[3]);
+    printText(info, boxes[3], defaultOffset);
   } while (display.nextPage());
   // delay(10);
 
@@ -141,40 +146,37 @@ void settingsScreen() {
 
 // Shows the preference screen
 void prefsScreen() {
-  display.firstPage();
-  
+
   String presetDisplay;
   if (selectedInputUnit == EXPOSUREVALUE) {
-      presetDisplay = "Preset " + formatSmallExposureTime(exposureIndex) + "ª";
+    presetDisplay = "Preset " + formatSmallExposureTime(exposureIndex) + "ª";
+  } else {
+    presetDisplay = "Preset " + formatMilliseconds(millisValue) + "ª";
   }
-  else {
-      presetDisplay = "Preset " + formatMilliseconds(millisValue) + "ª";
-  }
+  display.firstPage();
   do {  //page looping
     displayRadio("¨", boxes[0], selectedInputUnit == EXPOSUREVALUE);
     displayRadio("ms", boxes[1], selectedInputUnit == MILLISECONDS);  //
     displayCheckbox(presetDisplay.c_str(), boxes[2], includeUserValues);
     if (currentlyHighlightedPrefElement == PREF_OK) {
-        displayButton("«   OK   ¬", boxes[3]);
-    }
-    else {
-        displayButton("«     OK     ¬", boxes[3]);
+      displayButton("«   OK   ¬", boxes[3]);
+    } else {
+      displayButton("«     OK     ¬", boxes[3]);
     }
     handlePrefHighlight();
   } while (display.nextPage());
 }
 
 void handlePrefHighlight() {
-    //Handle Highlight
-    if (currentlyHighlightedPrefElement == PREF_RADIOGROUP) {
-        invertBox(boxes[0]);
-        invertBox(boxes[1]);
-    }
-    else if (currentlyHighlightedPrefElement == PREF_SETDEFAULTS) {
-        invertBox(boxes[2]);
-    } else if (currentlyHighlightedPrefElement == PREF_OK) {
-        invertBox(boxes[3]);
-    }
+  //Handle Highlight
+  if (currentlyHighlightedPrefElement == PREF_RADIOGROUP) {
+    invertBox(boxes[0]);
+    invertBox(boxes[1]);
+  } else if (currentlyHighlightedPrefElement == PREF_SETDEFAULTS) {
+    invertBox(boxes[2]);
+  } else if (currentlyHighlightedPrefElement == PREF_OK) {
+    invertBox(boxes[3]);
+  }
 }
 
 void updateDisplay() {

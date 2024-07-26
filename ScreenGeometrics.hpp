@@ -28,7 +28,10 @@ const byte boxes[nBoxes][4] = {
 #define CIRCLEFILLINSET 3  //The horizontal size of the left and right triangle, its height is twice that measure
 #define SQUAREINSET 1      //The horizontal size of the left and right triangle, its height is twice that measure
 #define SQUAREFILLINSET 4  //The horizontal size of the left and right triangle, its height is twice that measure
-#define TEXTDEDAULTOFFSETX 2
-#define TEXTDEDAULTOFFSETY 14
+
+#define TEXTDEDAULTOFFSETY 13
+
+#define PREFIXOFFSETX 2  // The offset for Prefix Elements, like checkboxs
+#define PREFIXOFFSETY 14  // The offset for Prefix Elements, like checkboxes
 
 #endif //SCREEN_GEOMETRICS_HPP

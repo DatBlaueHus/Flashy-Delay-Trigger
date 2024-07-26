@@ -69,10 +69,10 @@ void switchToNextMode() {
   if (currentMode == EXPOSURE) {
     currentMode = CORRECTION;
   } else if (currentMode == CORRECTION || currentMode == PREFS) {
-      currentMode = EXPOSURE;
+    currentMode = EXPOSURE;
   } else if (currentMode == SPLASH) {
-      currentMode = EXPOSURE;
-      updateInfo("Long £ for settings!", 0, 5);
+    currentMode = EXPOSURE;
+    updateInfo("Long £ for settings!", 0, 5);
   }
   setEncoderToState();
   displayNeedsUpdate = true;
@@ -83,7 +83,6 @@ void switchToNextMode() {
 void openPrefsDialog() {
   selectedInputUnit = preferredInputUnit;
   includeUserValues = true;
-  updateInfo(NULL);
   currentlyHighlightedPrefElement = PREF_OK;
   currentMode = PREFS;
   setEncoderToState();
@@ -114,8 +113,8 @@ bool closePrefDialog() {
 // Info Update ==========================
 
 // state
-unsigned long infoShownAt = 0; // the starting time of the current info shown, 0 if there should be no info switching
-byte infoID; //the identifier of the currently shown information, only relevant if there are rules for the next information to show
+unsigned long infoShownAt = 0;  // the starting time of the current info shown, 0 if there should be no info switching
+byte infoID;                    //the identifier of the currently shown information, only relevant if there are rules for the next information to show
 byte infoDuration;
 
 //Update the Info string, set , and set an optional display time after which the infoText must be removed or replaced
@@ -126,37 +125,44 @@ byte infoDuration;
 @param displayDuration: The times in seconds to show the infom or zero if the info should be diplayed until something newcomes up. After the given time the next info is shown or the info is removed
 */
 void updateInfo(const char* newInfo, byte identifier, byte displayDuration) {
-    free((void*)info); // If info was dynamically allocated before, free it
 
-    // Allocate memory and copy newInfo to info
-    info = strdup(newInfo); // strdup allocates memory and copies the string
-    if (info == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit(1);
-    }
+    //Skip if current info is an Error, Errors can not be replaced, but may run out if the timer is set
+  if (infoID == ERROR_INFO_ID) {
+    return;
+  }
+
+  free((void*)info);  // If info was dynamically allocated before, free it
+
+  // Allocate memory and copy newInfo to info
+  info = strdup(newInfo);  // strdup allocates memory and copies the string
+  if (info == NULL) {
+    fprintf(stderr, "Memory allocation failed\n");
+    exit(1);
+  }
   displayNeedsUpdate = true;
   infoID = identifier;
   infoDuration = displayDuration;
   if (infoDuration != 0) {
-      infoShownAt = millis();
+    infoShownAt = millis();
   }
 }
 
-//Checks for automatic Info Updates, i.e. an informataion which should be hidden or replaced by a followup 
+//Checks for automatic Info Updates, i.e. an informataion which should be hidden or replaced by a followup
 void checkForInfoUpdate() {
-    if (infoDuration == 0) { return; }
-     unsigned long now = millis();
-    unsigned long interval = now - infoShownAt;
-    
-    if (interval > (unsigned long)infoDuration * 1000) {
-        if (infoID == 0) {
-            updateInfo("");
-        }
-        else if (infoID == PRIMARY_SPLASH_INFO_ID) {
-            updateInfo(SECONDARY_SPLASH_INFO, SECONDARY_SPLASH_INFO_ID, 10);
-        }
-        else if (infoID == SECONDARY_SPLASH_INFO_ID) {
-            updateInfo("¼", 0, 0);
-        }
+  if (infoDuration == 0) { return; }
+  unsigned long now = millis();
+  unsigned long interval = now - infoShownAt;
+
+  if (interval > (unsigned long)infoDuration * 1000) {
+    if (infoID == 0) {
+      updateInfo("");
+    } else if (infoID == ERROR_INFO_ID) {
+      infoID = 0;
+      updateInfo("");
+    } else if (infoID == PRIMARY_SPLASH_INFO_ID || infoID == TERTIARY_SPLASH_INFO_ID) {
+      updateInfo(SECONDARY_SPLASH_INFO, SECONDARY_SPLASH_INFO_ID, 5);
+    } else if (infoID == SECONDARY_SPLASH_INFO_ID) {
+      updateInfo(TERTIARY_SPLASH_INFO, TERTIARY_SPLASH_INFO_ID, 2);
     }
+  }
 }

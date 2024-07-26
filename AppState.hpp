@@ -6,7 +6,7 @@
 
 #define APPNAME "®" // Flashy Delay Trigger Logo
 #define VERSIONTEMPLATE "¯%s   ©" //version + KB Stamp
-#define VERSION "1.0.0"
+#define VERSION "1.0.1"
 
 // Port configuration =======================================================
 
@@ -14,7 +14,7 @@
 #define FLASHPORT 0
 
 //digital in
-// PORT FOR X-SYNC SWITCH INPUT FROM CAMERA, MUST SUPPORT INTERRUPT
+// PORT FOR X-SYNC SWITCH INPUT FROM CAMERA, MUST SUPPORT INTERRUPT!
 #define XSYNCPORT 2
 // PORT FOR X-OUTPUT
 #define XOUTPORT 4
@@ -22,7 +22,7 @@
 #define ROTARYENCODER1 7
 // PORT FOR DIRECTION 2
 #define ROTARYENCODER2 8
-// THE PORT TO SET UP FOR THE ROTARY ENCODER PUSH BUTTON
+// THE PORT FOR THE ROTARY ENCODER PUSH BUTTON
 #define ROTARYENCODERSWITCH 9
 
 // DATA =======================================================
@@ -90,8 +90,12 @@ const char* info = NULL;
 
 #define PRIMARY_SPLASH_INFO_ID 1
 
+#define ERROR_INFO_ID 255
 #define SECONDARY_SPLASH_INFO_ID 2
 #define SECONDARY_SPLASH_INFO "¢ or ¡ button to start!"
+
+#define TERTIARY_SPLASH_INFO_ID 3
+#define TERTIARY_SPLASH_INFO "¼"
 
 //Replaces the info text and triggers a redraw
 void updateInfo(const char* newInfo, byte identifier = 0, byte showSeconds = 0);

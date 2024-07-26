@@ -1,10 +1,9 @@
 #include <RotaryEncoder.h>
 
 #include "AppState.hpp"
-
 #include "Utilities.hpp"
 
-//The encoder – not statically instantiated because the port should be injected
+//The rotary encoder
 RotaryEncoder encoder = RotaryEncoder(ROTARYENCODER1, ROTARYENCODER2, RotaryEncoder::LatchMode::FOUR3);
 
 const unsigned long longPressDelay = 500;
@@ -111,12 +110,12 @@ void handleSwitchPress() {
   static bool previousSwitchState = false;
   bool switchState = !digitalRead(ROTARYENCODERSWITCH);
   if (previousSwitchState != switchState) {  //State changed
-    if (switchState) {                       //Übergang nach On
+    if (switchState) {                       //Transition to On
       lastSwitchTime = millis();
       handleShortPress();
       previousSwitchState = switchState;
       delay(20);
-    } else {  //Übergang nach Off
+    } else {  //transition to Off
       lastSwitchTime = 0;
       previousSwitchState = switchState;
       delay(20);
