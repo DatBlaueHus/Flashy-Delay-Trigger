@@ -32,6 +32,6 @@ const byte boxes[nBoxes][4] = {
 #define TEXTDEDAULTOFFSETY 13
 
 #define PREFIXOFFSETX 2  // The offset for Prefix Elements, like checkboxs
-#define PREFIXOFFSETY 14  // The offset for Prefix Elements, like checkboxes
+#define PREFIXOFFSETY 12  // The offset for Prefix Elements, like checkboxes
 
 #endif //SCREEN_GEOMETRICS_HPP
