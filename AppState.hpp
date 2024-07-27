@@ -6,7 +6,7 @@
 
 #define APPNAME "®" // Flashy Delay Trigger Logo
 #define VERSIONTEMPLATE "¯%s   ©" //version + KB Stamp
-#define VERSION "1.0.2"
+#define VERSION "1.0.3"
 
 // Port configuration =======================================================
 
