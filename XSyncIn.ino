@@ -23,9 +23,15 @@ void handleChange() {
   xSyncTriggered = !xInputState;  // trigger goes to LOW
   if (xSyncTriggered) {
     xOn = micros();
-  } else {
-    xOff = micros();
-    unsigned long elapsed = xOff - xOn;
-    updateInfo(("¾ x-sync " + String(microsAsMillis(elapsed, 3))).c_str());
+  } 
+  #ifdef REPORTSYNCTIME
+  else {
+    if (reportXSyncTime) {
+        xOff = micros();
+        unsigned long elapsed = xOff - xOn;
+        // DO NOT DO THIS, THE OUTPUT JUST KILLS THE DELAY FUNCTION!
+        // updateInfo(("¾ x-sync " + String(microsAsMillis(elapsed, 3))).c_str());
+    }
   }
+  #endif
 }

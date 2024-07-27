@@ -60,6 +60,7 @@ enum InputMode : byte {
 };
 
 InputMode currentMode;  // The currently set Input handler
+bool blockUI = false;
 
 //switches to next screen
 void switchToNextMode();

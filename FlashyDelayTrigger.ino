@@ -20,9 +20,11 @@ void loop() {
     xSyncTriggered = false;
     fireDelayedTrigger();
   }
-  checkForInfoUpdate();
-  handleXTriggerState();
+  do {
+      handleXTriggerState();
+  } while (blockUI);
   handleFlashAnalyticsState();
   handleRotaryDelay();
+  checkForInfoUpdate();
   updateDisplay();
 }

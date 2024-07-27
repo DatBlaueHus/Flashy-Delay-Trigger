@@ -24,7 +24,7 @@ static unsigned int defaultOffset[2] = { 0, TEXTDEDAULTOFFSETY };
 
 void setupDisplay() {
   display.begin();
-  display.setBusClock(I2CCLOCKFREQUENCY);
+//  display.setBusClock(I2CCLOCKFREQUENCY);
   display.enableUTF8Print();
   display.setFont(SwissFoto);
   currentMode = SPLASH;
